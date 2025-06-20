@@ -1,5 +1,3 @@
-# test_SAP_numbers
-
 import os
 import json
 import re
@@ -35,6 +33,44 @@ YEAR_PATTERNS = [
     r'\b(20[0-3]\d)\b',  # Years from 2000-2039
     r'\b(19\d{2})\b'     # Years from 1900-1999
 ]
+
+# Enhanced address patterns with common abbreviations - FIXED REGEX
+ADDRESS_PATTERNS = {
+    "STREET": [
+        r'\b([a-zäöüß]+(?:[- ](?:[a-zäöüß]+))?\.?\s*\d{0,4}[a-z]?)\b',  # Fixed pattern
+        r'\b([a-zäöüß]+(?:[- ](?:[a-zäöüß]+))?\.?\b'  # Street name only
+    ],
+    "CITY": [
+        r'\b([a-z][a-zäöüß]+(?:[- ](?:[a-z][a-zäöüß]+))?)\b'  # City names
+    ],
+    "ZIP_CODE": [
+        r'\b(\d{4,5})\b'  # ZIP codes (4-5 digits)
+    ],
+    "COUNTRY": [
+        r'\b(deutschland|germany|österreich|austria|schweiz|switzerland)\b'
+    ]
+}
+
+# Common street suffix abbreviations with enhanced matching
+STREET_SUFFIXES = {
+    r'\bstr(?:\.|aße)?\b': 'straße',
+    r'\bstrasse\b': 'straße',
+    r'\bpl(?:\.|atz)?\b': 'platz',
+    r'\ballee\b': 'allee',
+    r'\bweg\b': 'weg',
+    r'\bg(?:\.|asse)?\b': 'gasse',
+    r'\bch(?:\.|aussee)?\b': 'chaussee',
+    r'\bblvd\b': 'boulevard',
+    r'\bave\b': 'avenue',
+    r'\bst(?:\.|reet)?\b': 'street',
+    r'\brd\b': 'road',
+    r'\bbr(?:\.|ücke)?\b': 'brücke',
+    r'\bbruecke\b': 'brücke',
+    r'\bprom(?:\.|enade)?\b': 'promenade',
+    r'\bstr\b': 'straße',  # Common abbreviation
+    r'\bpl\b': 'platz',    # Common abbreviation
+    r'\bstr\.\b': 'straße' # Abbreviation with dot
+}
 
 def extract_dates(text):
     dates = set()
@@ -74,6 +110,54 @@ def extract_years(text):
         matches = re.findall(pattern, text)
         years.update(matches)
     return years
+
+def extract_address_components(text):
+    components = {
+        "STREET": set(),
+        "CITY": set(),
+        "ZIP_CODE": set(),
+        "COUNTRY": set()
+    }
+    
+    # Extract street names
+    for pattern in ADDRESS_PATTERNS["STREET"]:
+        try:
+            matches = re.findall(pattern, text)
+            for match in matches:
+                street_name = match.strip()
+                # Normalize street suffixes
+                for pattern, replacement in STREET_SUFFIXES.items():
+                    street_name = re.sub(pattern, replacement, street_name, flags=re.IGNORECASE)
+                components["STREET"].add(street_name)
+        except re.error as e:
+            print(f"Regex error with pattern '{pattern}': {str(e)}")
+    
+    # Extract cities
+    for pattern in ADDRESS_PATTERNS["CITY"]:
+        try:
+            matches = re.findall(pattern, text)
+            for match in matches:
+                components["CITY"].add(match.strip())
+        except re.error as e:
+            print(f"Regex error with pattern '{pattern}': {str(e)}")
+    
+    # Extract ZIP codes
+    for pattern in ADDRESS_PATTERNS["ZIP_CODE"]:
+        try:
+            matches = re.findall(pattern, text)
+            components["ZIP_CODE"].update(matches)
+        except re.error as e:
+            print(f"Regex error with pattern '{pattern}': {str(e)}")
+    
+    # Extract countries
+    for pattern in ADDRESS_PATTERNS["COUNTRY"]:
+        try:
+            matches = re.findall(pattern, text, flags=re.IGNORECASE)
+            components["COUNTRY"].update(match.strip().lower() for match in matches)
+        except re.error as e:
+            print(f"Regex error with pattern '{pattern}': {str(e)}")
+    
+    return components
 
 # Load SAP data
 sap_file = r"C:\projects\hackathon_ScienceHack\BECONEX_challenge_materials_samples\SAP_data.json"
@@ -148,9 +232,10 @@ for filename in os.listdir(pdf_folder):
     pdf_path = os.path.join(pdf_folder, filename)
     pdf_text = extract_text_from_pdf(pdf_path)
     
-    # Extract dates and years from PDF text
+    # Extract dates, years, and address components from PDF text
     extracted_dates = extract_dates(pdf_text)
     extracted_years = extract_years(pdf_text)
+    extracted_address = extract_address_components(pdf_text)
     
     best_score = 0
     best_entry = None
@@ -191,8 +276,74 @@ for filename in os.listdir(pdf_folder):
                     match_details[field] = "Not matched"
                 continue
                 
-            # Special handling for numeric fields
-            if field in ["Vendor - Address - Number", "Vendor - Address - ZIP Code"]:
+            # Special handling for address fields
+            if field == "Vendor - Address - Street":
+                # Normalize SAP street name for comparison
+                sap_street = normalized_value
+                for pattern, replacement in STREET_SUFFIXES.items():
+                    sap_street = re.sub(pattern, replacement, sap_street, flags=re.IGNORECASE)
+                
+                # Check against extracted streets
+                matched = False
+                for street in extracted_address["STREET"]:
+                    # Use flexible matching with normalization
+                    norm_street = street
+                    for pattern, replacement in STREET_SUFFIXES.items():
+                        norm_street = re.sub(pattern, replacement, norm_street, flags=re.IGNORECASE)
+                    
+                    if sap_street == norm_street:
+                        score += field_weights[field]
+                        match_details[field] = f"Matched: {street}"
+                        matched = True
+                        break
+                if not matched:
+                    match_details[field] = "Not matched"
+                continue
+                
+            if field == "Vendor - Address - City":
+                # Check against extracted cities
+                sap_city = normalized_value
+                matched = False
+                for city in extracted_address["CITY"]:
+                    if sap_city == city:
+                        score += field_weights[field]
+                        match_details[field] = f"Matched: {city}"
+                        matched = True
+                        break
+                if not matched:
+                    match_details[field] = "Not matched"
+                continue
+                
+            if field == "Vendor - Address - Country":
+                # Check against extracted countries
+                sap_country = normalized_value
+                matched = False
+                for country in extracted_address["COUNTRY"]:
+                    if sap_country == country:
+                        score += field_weights[field]
+                        match_details[field] = f"Matched: {country}"
+                        matched = True
+                        break
+                if not matched:
+                    match_details[field] = "Not matched"
+                continue
+                
+            if field == "Vendor - Address - ZIP Code":
+                # Check against extracted ZIP codes
+                sap_zip = normalized_value
+                matched = False
+                for zip_code in extracted_address["ZIP_CODE"]:
+                    if sap_zip == zip_code:
+                        score += field_weights[field]
+                        match_details[field] = f"Matched: {zip_code}"
+                        matched = True
+                        break
+                if not matched:
+                    match_details[field] = "Not matched"
+                continue
+                
+            # Special handling for other numeric fields
+            if field in ["Vendor - Address - Number"]:
                 # Look for exact number matches
                 if re.search(rf'\b{re.escape(normalized_value)}\b', pdf_text):
                     score += field_weights[field]
