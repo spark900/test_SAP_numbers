@@ -1,4 +1,4 @@
-import fitz  # PyMuPDF
+import fitz  # pip install PyMuPDF you got to install this module first
 import json
 
 # Set paths
