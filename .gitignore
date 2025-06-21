@@ -6,7 +6,7 @@ output_comprehensive_2.json
 output_enhanced.json
 #dummy_out.json
 #DUMMY_SAP.json
-dummy_invoices.pdf
+#dummy_invoices.pdf
 date_match_bauhaus.py
 test_out_bauhaus.py
 BauHaus_find_date.py
