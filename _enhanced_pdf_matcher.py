@@ -208,15 +208,15 @@ class EnhancedPDFMatcher:
     def preprocess_sap_data(self, sap_data: List[Dict]) -> List[Dict]:
         """Preprocess SAP data for matching"""
         field_weights = {
-            "Delivery Note Number": 15,  # Increased weight for delivery note
+            "Delivery Note Number": 10,  # Increased weight for delivery note
             "Delivery Note Date": 5,     # Increased weight for date
             "Vendor - Name 1": 4,
             "Vendor - Name 2": 2,
-            "Vendor - Address - Street": 3,
+            "Vendor - Address - Street": 4,
             "Vendor - Address - Number": 2,
             "Vendor - Address - ZIP Code": 4,  # Increased weight for ZIP
             "Vendor - Address - City": 4,      # Increased weight for city
-            "Vendor - Address - Country": 3,
+            "Vendor - Address - Country": 1,
             "Vendor - Address - Region": 1,
         }
         
@@ -492,9 +492,9 @@ def main():
     print("="*80)
     
     # Get file paths from user input
-    pdf_path = r"C:\projects\hackathon_ScienceHack\BECONEX_challenge_materials_samples\batch_1_2017_2018.pdf"
+    pdf_path = r"C:\projects\hackathon_ScienceHack\BECONEX_challenge_materials_samples\batch_7_2023_2024.pdf"
     sap_file = r"C:\projects\hackathon_ScienceHack\BECONEX_challenge_materials_samples\SAP_data.json"
-    output_path = r"C:\projects\hackathon_ScienceHack\output_2017.json"
+    output_path = r"C:\projects\hackathon_ScienceHack\output_2024.json"
     
     if not pdf_path or not sap_file or not output_path:
         print("Error: All file paths are required")

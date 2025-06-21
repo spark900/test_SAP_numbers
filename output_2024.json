@@ -1,0 +1,138 @@
+[
+    {
+        "page_number": 1,
+        "Delivery Note Number": "1202002328060",
+        "UID": "5049001493_2024",
+        "match_score": 32.03612903225806,
+        "match_details": {
+            "Delivery Note Number": "Text found: 1202002328060",
+            "Delivery Note Date": "Exact match: 2024-12-13",
+            "Vendor - Name 1": "Fuzzy match: 'alternate' (ratio: 0.900)",
+            "Vendor - Address - Street": "Fuzzy match: 'philipp-reis-st. 2' (ratio: 0.839)",
+            "Vendor - Address - Number": "Exact match: 2-3",
+            "Vendor - Address - ZIP Code": "Exact match: 35440",
+            "Vendor - Address - City": "Fuzzy match: 'linden deutsci-land' (ratio: 1.000)",
+            "Vendor - Address - Country": "Fuzzy match: 'deutschland' (ratio: 1.000)"
+        }
+    },
+    {
+        "page_number": 2,
+        "UID": "NONE FOUND IN SAP JSON"
+    },
+    {
+        "page_number": 3,
+        "Delivery Note Number": 55199308,
+        "UID": "5049001472_2024",
+        "match_score": 26.444444444444443,
+        "match_details": {
+            "Delivery Note Number": "Text found: 55199308",
+            "Delivery Note Date": "Exact match: 2024-10-16",
+            "Vendor - Name 1": "Not matched",
+            "Vendor - Address - Street": "Fuzzy match: 'brandstricken 25' (ratio: 0.815)",
+            "Vendor - Address - Number": "Exact match: 25-27",
+            "Vendor - Address - ZIP Code": "Exact match: 22549",
+            "Vendor - Address - City": "Fuzzy match: 'regoergeneht ag hamburg' (ratio: 1.000)",
+            "Vendor - Address - Country": "Not matched"
+        }
+    },
+    {
+        "page_number": 4,
+        "Delivery Note Number": 200201104,
+        "UID": "5049001500_2024",
+        "match_score": 17.0,
+        "match_details": {
+            "Delivery Note Number": "Text found: 200201104",
+            "Delivery Note Date": "Exact match: 2024-12-19",
+            "Vendor - Name 1": "Not matched",
+            "Vendor - Address - Street": "Not matched",
+            "Vendor - Address - Number": "Not matched",
+            "Vendor - Address - ZIP Code": "Not matched",
+            "Vendor - Address - City": "Not matched",
+            "Vendor - Address - Country": "Fuzzy match: 'deutschland' (ratio: 1.000)"
+        }
+    },
+    {
+        "page_number": 5,
+        "Delivery Note Number": "V85550022",
+        "UID": "5049001448_2023",
+        "match_score": 28.0,
+        "match_details": {
+            "Delivery Note Number": "Text found: v85550022",
+            "Delivery Note Date": "Exact match: 2023-12-14",
+            "Vendor - Name 1": "Exact match: ark computer-produkte gmbh",
+            "Vendor - Address - Street": "Not matched",
+            "Vendor - Address - Number": "Exact match: 8",
+            "Vendor - Address - ZIP Code": "Exact match: 71106",
+            "Vendor - Address - City": "Fuzzy match: 'magstadt' (ratio: 1.000)",
+            "Vendor - Address - Country": "Not matched"
+        }
+    },
+    {
+        "page_number": 6,
+        "Delivery Note Number": 607815474,
+        "UID": "5049001457_2023",
+        "match_score": 28.82,
+        "match_details": {
+            "Delivery Note Number": "Text found: 607815474",
+            "Delivery Note Date": "Exact match: 2023-12-20",
+            "Vendor - Name 1": "Fuzzy match: 'cyberport' (ratio: 0.900)",
+            "Vendor - Address - Street": "Fuzzy match: 'am brauhaus 5' (ratio: 0.900)",
+            "Vendor - Address - Number": "Exact match: 5",
+            "Vendor - Address - ZIP Code": "Fuzzy match: 01099 (ratio: 0.900)",
+            "Vendor - Address - City": "Fuzzy match: 'dresden' (ratio: 1.000)",
+            "Vendor - Address - Country": "Not matched"
+        }
+    },
+    {
+        "page_number": 7,
+        "Delivery Note Number": "VKLS0076748",
+        "UID": "5049001479_2024",
+        "match_score": 33.608695652173914,
+        "match_details": {
+            "Delivery Note Number": "Text found: vkls0076748",
+            "Delivery Note Date": "Exact match: 2024-10-23",
+            "Vendor - Name 1": "Exact match: labelident gmbh",
+            "Vendor - Address - Street": "Fuzzy match: 'parisstrage 5' (ratio: 0.870)",
+            "Vendor - Address - Number": "Exact match: 5",
+            "Vendor - Address - ZIP Code": "Exact match: 97424",
+            "Vendor - Address - City": "Fuzzy match: 'amtsgericht schweinfurt' (ratio: 1.000)",
+            "Vendor - Address - Country": "Fuzzy match: 'deutschland' (ratio: 1.000)"
+        }
+    },
+    {
+        "page_number": 8,
+        "UID": "NONE FOUND IN SAP JSON"
+    },
+    {
+        "page_number": 9,
+        "Delivery Note Number": "0052984347",
+        "UID": "5049001430_2023",
+        "match_score": 30.7,
+        "match_details": {
+            "Delivery Note Number": "Text found: 0052984347",
+            "Delivery Note Date": "Exact match: 2023-10-20",
+            "Vendor - Name 1": "Exact match: cyberport se",
+            "Vendor - Address - Street": "Fuzzy match: 'europaring 20' (ratio: 0.900)",
+            "Vendor - Address - Number": "Exact match: 20-22",
+            "Vendor - Address - ZIP Code": "Exact match: 94315",
+            "Vendor - Address - City": "Fuzzy match: 'straubing' (ratio: 1.000)",
+            "Vendor - Address - Country": "Not matched"
+        }
+    },
+    {
+        "page_number": 10,
+        "Delivery Note Number": "LS23-225948",
+        "UID": "5049001439_2023",
+        "match_score": 34.0,
+        "match_details": {
+            "Delivery Note Number": "Text found: ls23-225948",
+            "Delivery Note Date": "Exact match: 2023-12-10",
+            "Vendor - Name 1": "Exact match: foto erhardt gmbh",
+            "Vendor - Address - Street": "Fuzzy match: 'foto erhardt gmbh gartenkamp 101' (ratio: 1.000)",
+            "Vendor - Address - Number": "Exact match: 101",
+            "Vendor - Address - ZIP Code": "Exact match: 49492",
+            "Vendor - Address - City": "Fuzzy match: 'westerkappeln' (ratio: 1.000)",
+            "Vendor - Address - Country": "Fuzzy match: 'deutschland' (ratio: 1.000)"
+        }
+    }
+]
