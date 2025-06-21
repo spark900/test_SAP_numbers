@@ -2,6 +2,7 @@ import os
 import json
 import re
 import PyPDF2
+from datetime import datetime
 from difflib import SequenceMatcher
 
 def extract_text_from_pdf(pdf_path):
@@ -19,16 +20,36 @@ def extract_text_from_pdf(pdf_path):
         return ""
 
 DATE_PATTERNS = [
+    # Add this pattern FIRST for time-formatted dates (case-insensitive AM/PM)
+    r'\b\d{1,2}/\d{1,2}/\d{4}\s+\d{1,2}:\d{2}:\d{2}\s*(?:am|pm)?\b',  # 6/19/2023 4:47:50AM
+    
+    # Existing patterns below
     r'\b\d{4}-\d{2}-\d{2}\b',       # YYYY-MM-DD
     r'\b\d{2}\.\d{2}\.\d{4}\b',     # DD.MM.YYYY
     r'\b\d{4}\.\d{2}\.\d{2}\b',     # YYYY.MM.DD
-    r'\b\d{2}/\d{2}/\d{4}\b',       # MM/DD/YYYY
+    r'\b\d{1,2}[-/.]\d{1,2}[-/.]\d{4}(?=\s|$)',  # MM/DD/YYYY
     r'\b\d{4}/\d{2}/\d{2}\b',       # YYYY/MM/DD
     r'\b\d{1,2}\s+[A-Za-z]{3,10}\s+\d{4}\b',  # 01 January 2023
     r'\b[A-Za-z]{3,10}\s+\d{1,2},\s+\d{4}\b',  # January 01, 2023
     r'\b\d{8}\b'                     # YYYYMMDD
 ]
-#fgf
+# Parse a string into a datetime.date (fuzzy)
+def normalize_to_date(date_str):
+    formats = [
+        "%m/%d/%Y %I:%M:%S%p",  # 6/19/2023 4:47:50AM
+        "%m/%d/%Y",             # 6/19/2023
+        "%Y-%m-%d", "%Y.%m.%d", "%Y/%m/%d",
+        "%d.%m.%Y", "%d-%m-%Y",
+        "%Y%m%d",
+        "%d %B %Y", "%B %d %Y", "%B %d, %Y"
+    ]
+    for fmt in formats:
+        try:
+            return datetime.strptime(date_str.strip(), fmt).date()
+        except ValueError:
+            continue
+    return None
+
 # Global ZIP code patterns
 ZIP_PATTERNS = [
     r'\b\d{4,5}\b',          # Standard 4-5 digit ZIP (DE/AT)
@@ -61,31 +82,71 @@ STREET_SUFFIXES = {
     r'\bburgstr\b': 'burgstraße'
 }
 
+# def extract_dates(text):
+#     dates = set()
+#     for pattern in DATE_PATTERNS:
+#         matches = re.findall(pattern, text)
+#         for match in matches:
+#             # Normalization logic remains the same
+#             if re.match(r'\d{4}-\d{2}-\d{2}', match):
+#                 dates.add(match)
+#             elif re.match(r'\d{2}\.\d{2}\.\d{4}', match):
+#                 d, m, y = match.split('.')
+#                 dates.add(f"{y}-{m.zfill(2)}-{d.zfill(2)}")
+#             elif re.match(r'\d{4}\.\d{2}\.\d{2}', match):
+#                 y, m, d = match.split('.')
+#                 dates.add(f"{y}-{m}-{d}")
+#             elif re.match(r'\d{2}/\d{2}/\d{4}', match):
+#                 m, d, y = match.split('/')
+#                 dates.add(f"{y}-{m.zfill(2)}-{d.zfill(2)}")
+#             elif re.match(r'\d{4}/\d{2}/\d{2}', match):
+#                 y, m, d = match.split('/')
+#                 dates.add(f"{y}-{m}-{d}")
+#             elif re.match(r'\d{8}', match):
+#                 dates.add(f"{match[:4]}-{match[4:6]}-{match[6:8]}")
+#             else:
+#                 dates.add(match)
+#     return dates
+
+
 def extract_dates(text):
-    dates = set()
+    raw_dates = set()
     for pattern in DATE_PATTERNS:
         matches = re.findall(pattern, text)
-        for match in matches:
-            # Normalization logic remains the same
-            if re.match(r'\d{4}-\d{2}-\d{2}', match):
-                dates.add(match)
-            elif re.match(r'\d{2}\.\d{2}\.\d{4}', match):
-                d, m, y = match.split('.')
-                dates.add(f"{y}-{m.zfill(2)}-{d.zfill(2)}")
-            elif re.match(r'\d{4}\.\d{2}\.\d{2}', match):
-                y, m, d = match.split('.')
-                dates.add(f"{y}-{m}-{d}")
-            elif re.match(r'\d{2}/\d{2}/\d{4}', match):
-                m, d, y = match.split('/')
-                dates.add(f"{y}-{m.zfill(2)}-{d.zfill(2)}")
-            elif re.match(r'\d{4}/\d{2}/\d{2}', match):
-                y, m, d = match.split('/')
-                dates.add(f"{y}-{m}-{d}")
-            elif re.match(r'\d{8}', match):
-                dates.add(f"{match[:4]}-{match[4:6]}-{match[6:8]}")
-            else:
-                dates.add(match)
-    return dates
+        raw_dates.update(matches)
+
+    normalized_dates = set()
+    date_formats = [
+        "%Y-%m-%d",            # 2023-06-19
+        "%d.%m.%Y",            # 19.06.2023
+        "%Y.%m.%d",            # 2023.06.19
+        "%m/%d/%Y",            # 6/19/2023
+        "%m/%d/%Y %I:%M:%S%p", # 6/19/2023 4:47:50AM
+        "%Y/%m/%d",            # 2023/06/19
+        "%d %B %Y",            # 19 June 2023
+        "%B %d %Y",            # June 19 2023
+        "%B %d, %Y",           # June 19, 2023
+        "%Y%m%d",              # 20230619
+        "%m/%d/%Y %I:%M:%S%p",  # 6/19/2023 4:47:50AM - ADDED
+        "%m/%d/%Y",             # 6/19/2023
+        "%Y-%m-%d", "%Y.%m.%d", "%Y/%m/%d",
+        "%d.%m.%Y", "%d-%m-%Y",
+        "%Y%m%d",
+        "%d %B %Y", "%B %d %Y", "%B %d, %Y"
+    ]
+
+    for raw in raw_dates:
+        raw = raw.strip()
+        for fmt in date_formats:
+            try:
+                dt = datetime.strptime(raw, fmt)
+                normalized_dates.add(dt.date().isoformat())
+                break
+            except ValueError:
+                continue
+
+    return normalized_dates
+
 
 def extract_address_components(text):
     components = {
