@@ -5,8 +5,6 @@ import PyPDF2
 from datetime import datetime
 from difflib import SequenceMatcher
 from typing import List, Dict, Set, Tuple, Optional
-import tkinter as tk
-from tkinter import filedialog, messagebox
 
 class EnhancedPDFMatcher:
     def __init__(self):
@@ -417,52 +415,6 @@ class EnhancedPDFMatcher:
             }
         } if best_entry else None
 
-    def select_files(self):
-        """Open file dialogs to select input and output files"""
-        root = tk.Tk()
-        root.withdraw()  # Hide the main window
-        
-        try:
-            # Select PDF file
-            pdf_path = filedialog.askopenfilename(
-                title="Select PDF file",
-                filetypes=[("PDF files", "*.pdf"), ("All files", "*.*")]
-            )
-            if not pdf_path:
-                print("No PDF file selected. Exiting.")
-                return None
-            
-            # Select SAP JSON file
-            sap_file = filedialog.askopenfilename(
-                title="Select SAP JSON file",
-                filetypes=[("JSON files", "*.json"), ("All files", "*.*")]
-            )
-            if not sap_file:
-                print("No SAP JSON file selected. Exiting.")
-                return None
-            
-            # Select output file location
-            output_path = filedialog.asksaveasfilename(
-                title="Save results as",
-                defaultextension=".json",
-                filetypes=[("JSON files", "*.json"), ("All files", "*.*")]
-            )
-            if not output_path:
-                print("No output file selected. Exiting.")
-                return None
-            
-            return {
-                'pdf_path': pdf_path,
-                'sap_file': sap_file,
-                'output_path': output_path
-            }
-            
-        except Exception as e:
-            print(f"Error selecting files: {e}")
-            return None
-        finally:
-            root.destroy()
-
     def process_pdf(self, pdf_path: str, sap_file: str, output_path: str, threshold: float = 15.0):
         """Main processing function with higher default threshold"""
         print("Loading SAP data...")
@@ -530,20 +482,21 @@ class EnhancedPDFMatcher:
 
 def main():
     print("="*80)
-    print("IMPROVED PDF MATCHER WITH FILE SELECTION")
+    print("IMPROVED PDF MATCHER")
     print("="*80)
     
-    # Initialize matcher
-    matcher = EnhancedPDFMatcher()
+    # Get file paths from user input
+    pdf_path = r"C:\projects\hackathon_ScienceHack\BECONEX_challenge_materials_samples\batch_1_2017_2018.pdf"
+    sap_file = r"C:\projects\hackathon_ScienceHack\BECONEX_challenge_materials_samples\SAP_data.json"
+    output_path = r"C:\projects\hackathon_ScienceHack\output_2017.json"
     
-    # Select files using GUI
-    config = matcher.select_files()
-    if not config:
+    if not pdf_path or not sap_file or not output_path:
+        print("Error: All file paths are required")
         return
     
-    print(f"PDF file: {config['pdf_path']}")
-    print(f"SAP file: {config['sap_file']}")
-    print(f"Output file: {config['output_path']}")
+    print(f"\nPDF file: {pdf_path}")
+    print(f"SAP file: {sap_file}")
+    print(f"Output file: {output_path}")
     
     # Ask for threshold
     try:
@@ -555,12 +508,15 @@ def main():
     print(f"Using threshold: {threshold}")
     print("="*80)
     
+    # Initialize matcher
+    matcher = EnhancedPDFMatcher()
+    
     # Process PDF
     try:
         results = matcher.process_pdf(
-            config['pdf_path'],
-            config['sap_file'], 
-            config['output_path'],
+            pdf_path,
+            sap_file, 
+            output_path,
             threshold
         )
         
