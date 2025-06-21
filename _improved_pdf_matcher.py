@@ -79,6 +79,7 @@ class EnhancedPDFMatcher:
             r'\bpl(?:\.|atz)?\b': 'platz',
             r'\ballee\b': 'allee',
             r'\bweg\b': 'weg',
+            r'\bring\b': 'ring', # I added this idk if this approach is useful at all
             r'\bg(?:\.|asse)?\b': 'gasse',
             r'\bch(?:\.|aussee)?\b': 'chaussee',
             r'\bbr(?:\.|ücke)?\b': 'brücke',
@@ -546,13 +547,14 @@ class EnhancedPDFMatcher:
 
 
 def main():
-    """Main execution function"""
-    # Configuration
+   
+   
     config = {
         'pdf_path': r"C:\projects\hackathon_ScienceHack\dummy_invoices.pdf",
         'sap_file': r"C:\projects\hackathon_ScienceHack\DUMMY_SAP.json", 
         'output_path': r"C:\projects\hackathon_ScienceHack\dummy_out.json",
-        'threshold': 4.0  # Minimum matching score threshold
+        # POSSIBLE TO CHANGE IF ITS TOO LOW OR TOO HIGH
+        'threshold': 6.0  # Minimum matching score threshold
     }
     
     print("="*80)
