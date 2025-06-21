@@ -168,9 +168,9 @@ def display_matches(results, sap_data, pdf_texts):
 
 def main():
     # File paths
-    results_file = r"C:\projects\hackathon_ScienceHack\dummy_out.json"
-    sap_file = r"C:\projects\hackathon_ScienceHack\DUMMY_SAP.json"
-    pdf_file = r"C:\projects\hackathon_ScienceHack\dummy_invoices.pdf"
+    results_file = r"C:\projects\hackathon_ScienceHack\output_2017.json"
+    sap_file = r"C:\projects\hackathon_ScienceHack\BECONEX_challenge_materials_samples\SAP_data.json"
+    pdf_file = r"C:\projects\hackathon_ScienceHack\BECONEX_challenge_materials_samples\batch_1_2017_2018.pdf"
     
     print("Loading data...")
     

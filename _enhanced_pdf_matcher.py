@@ -5,12 +5,12 @@ import PyPDF2
 from datetime import datetime
 from difflib import SequenceMatcher
 from typing import List, Dict, Set, Tuple, Optional
+import tkinter as tk
+from tkinter import filedialog, messagebox
 
 class EnhancedPDFMatcher:
     def __init__(self):
         self.setup_patterns()
-        self.setup_country_mappings()
-        self.setup_street_suffixes()
         
     def setup_patterns(self):
         """Initialize regex patterns for data extraction"""
@@ -38,63 +38,6 @@ class EnhancedPDFMatcher:
             r'note\s*number[:\s]*([^\n\r\s]+(?:\s+[^\n\r\s]+)*)',
             r'number[:\s]*([^\n\r\s]+(?:\s+[^\n\r\s]+)*)',
         ]
-    
-    def setup_country_mappings(self):
-        """Setup comprehensive country name mappings"""
-        self.COUNTRY_MAPPINGS = {
-            # Germany variants
-            'germany': ['germany', 'deutschland', 'allemagne', 'alemania', 'germania', 'niemcy', 'german', 'de'],
-            # USA variants  
-            'usa': ['usa', 'us', 'united states', 'united states of america', 'america', 'estados unidos', 'vereinigte staaten'],
-            # Austria variants
-            'austria': ['austria', 'österreich', 'autriche', 'oostenrijk', 'austria-hungary'],
-            # Switzerland variants
-            'switzerland': ['switzerland', 'schweiz', 'suisse', 'svizzera', 'suiza', 'szwajcaria'],
-            # France variants
-            'france': ['france', 'frankreich', 'francia', 'frankrijk', 'francja'],
-            # Italy variants
-            'italy': ['italy', 'italien', 'italia', 'italie', 'włochy'],
-            # Spain variants
-            'spain': ['spain', 'spanien', 'españa', 'espagne', 'spanje', 'hiszpania'],
-            # UK variants
-            'uk': ['uk', 'united kingdom', 'great britain', 'britain', 'england', 'scotland', 'wales', 'northern ireland'],
-            # Canada variants
-            'canada': ['canada', 'kanada'],
-            # Poland variants
-            'poland': ['poland', 'polen', 'pologne', 'polonia', 'polska']
-        }
-        
-        # Create reverse mapping for quick lookup
-        self.country_reverse_map = {}
-        for standard, variants in self.COUNTRY_MAPPINGS.items():
-            for variant in variants:
-                self.country_reverse_map[variant.lower()] = standard
-    
-    def setup_street_suffixes(self):
-        """Setup street suffix mappings with fuzzy matching support"""
-        self.STREET_SUFFIXES = {
-            # German street suffixes
-            r'\bstr(?:\.|aße|asse)?\b': 'straße',
-            r'\bstrasse\b': 'straße',
-            r'\bpl(?:\.|atz)?\b': 'platz',
-            r'\ballee\b': 'allee',
-            r'\bweg\b': 'weg',
-            r'\bring\b': 'ring', # I added this idk if this approach is useful at all
-            r'\bg(?:\.|asse)?\b': 'gasse',
-            r'\bch(?:\.|aussee)?\b': 'chaussee',
-            r'\bbr(?:\.|ücke)?\b': 'brücke',
-            r'\bbruecke\b': 'brücke',
-            r'\bprom(?:\.|enade)?\b': 'promenade',
-            # English street suffixes
-            r'\bst(?:\.|reet)?\b': 'street',
-            r'\bave(?:\.|nue)?\b': 'avenue',
-            r'\brd\b': 'road',
-            r'\bblvd\b': 'boulevard',
-            r'\bln\b': 'lane',
-            r'\bdr\b': 'drive',
-            r'\bct\b': 'court',
-            r'\bpl\b': 'place',
-        }
 
     def normalize_text_for_fuzzy(self, text: str) -> str:
         """Normalize text for fuzzy matching"""
@@ -106,21 +49,25 @@ class EnhancedPDFMatcher:
         normalized = re.sub(r'[^\w]', '', normalized)
         return normalized
 
-    def fuzzy_match_enhanced(self, str1: str, str2: str, threshold: float = 0.75) -> Tuple[bool, float]:
-        """Enhanced fuzzy matching considering dots, spaces, and special characters"""
+    def fuzzy_match_enhanced(self, str1: str, str2: str, threshold: float = 0.8) -> Tuple[bool, float]:
+        """Enhanced fuzzy matching with stricter thresholds to avoid false matches"""
         if not str1 or not str2:
             return False, 0.0
         
         str1_lower = str1.lower().strip()
         str2_lower = str2.lower().strip()
         
-        # Direct match
+        # Direct match - highest confidence
         if str1_lower == str2_lower:
             return True, 1.0
         
-        # Substring match
+        # Substring match - high confidence
         if str1_lower in str2_lower or str2_lower in str1_lower:
-            return True, 0.9
+            # But only if the substring is significant (at least 60% of the shorter string)
+            min_len = min(len(str1_lower), len(str2_lower))
+            max_len = max(len(str1_lower), len(str2_lower))
+            if min_len / max_len >= 0.6:
+                return True, 0.9
         
         # Original strings ratio
         original_ratio = SequenceMatcher(None, str1_lower, str2_lower).ratio()
@@ -133,23 +80,21 @@ class EnhancedPDFMatcher:
         # Token-based matching for multi-word strings
         tokens1 = set(str1_lower.split())
         tokens2 = set(str2_lower.split())
+        token_overlap = 0
         if tokens1 and tokens2:
-            token_overlap = len(tokens1.intersection(tokens2)) / len(tokens1.union(tokens2))
-        else:
-            token_overlap = 0
+            common_tokens = tokens1.intersection(tokens2)
+            # Only count meaningful token overlaps
+            if common_tokens:
+                # Filter out very short tokens (like 'de', 'a', etc.)
+                meaningful_common = [t for t in common_tokens if len(t) > 2]
+                if meaningful_common:
+                    token_overlap = len(meaningful_common) / min(len(tokens1), len(tokens2))
         
-        # Take the best ratio
+        # Take the best ratio but be more conservative
         best_ratio = max(original_ratio, normalized_ratio, token_overlap)
         
+        # Apply stricter threshold for fuzzy matches
         return best_ratio >= threshold, best_ratio
-
-    def normalize_country(self, country: str) -> str:
-        """Normalize country name to standard form"""
-        if not country:
-            return ""
-        
-        country_clean = re.sub(r'[^\w\s]', '', country.lower().strip())
-        return self.country_reverse_map.get(country_clean, country_clean)
 
     def extract_text_from_pdf_by_page(self, pdf_path: str) -> List[str]:
         """Extract text from each page of a PDF separately"""
@@ -214,7 +159,7 @@ class EnhancedPDFMatcher:
         return delivery_notes
 
     def extract_address_components(self, text: str) -> Dict[str, Set[str]]:
-        """Extract address components with improved fuzzy matching"""
+        """Extract address components with fuzzy matching only"""
         components = {
             "STREET": set(),
             "CITY": set(), 
@@ -222,7 +167,7 @@ class EnhancedPDFMatcher:
             "COUNTRY": set()
         }
         
-        # Extract streets with better pattern matching
+        # Extract streets - simplified without suffix normalization
         street_patterns = [
             r'\b([a-zäöüß]+(?:[.\s-](?:[a-zäöüß]+))*\.?\s*\d{0,4}[a-z]?)\b',
             r'\b(\d+(?:st|nd|rd|th)?)\s+([a-zäöüß]+(?:[.\s-](?:[a-zäöüß]+))*)\b'
@@ -236,11 +181,7 @@ class EnhancedPDFMatcher:
                 else:
                     street_name = match.strip()
                 
-                # Normalize street suffixes
-                for suffix_pattern, replacement in self.STREET_SUFFIXES.items():
-                    street_name = re.sub(suffix_pattern, replacement, street_name, flags=re.IGNORECASE)
-                
-                if len(street_name) > 2:  # Filter out very short matches
+                if len(street_name) > 3:  # Filter out very short matches
                     components["STREET"].add(street_name)
         
         # Extract cities (improved pattern)
@@ -256,27 +197,27 @@ class EnhancedPDFMatcher:
             matches = re.findall(pattern, text)
             components["ZIP_CODE"].update(matches)
         
-        # Extract countries with normalization
-        country_pattern = r'\b(' + '|'.join(self.country_reverse_map.keys()) + r')\b'
-        matches = re.findall(country_pattern, text, flags=re.IGNORECASE)
+        # Extract countries - simplified without normalization
+        country_pattern = r'\b([A-Za-z]{4,})\b'  # Simple country name pattern
+        matches = re.findall(country_pattern, text)
         for match in matches:
-            normalized_country = self.normalize_country(match)
-            if normalized_country:
-                components["COUNTRY"].add(normalized_country)
+            country = match.strip().lower()
+            if len(country) > 3:  # Only meaningful country names
+                components["COUNTRY"].add(country)
         
         return components
 
     def preprocess_sap_data(self, sap_data: List[Dict]) -> List[Dict]:
         """Preprocess SAP data for matching"""
         field_weights = {
-            "Delivery Note Number": 6,
-            "Delivery Note Date": 4,
+            "Delivery Note Number": 10,  # Increased weight for delivery note
+            "Delivery Note Date": 6,     # Increased weight for date
             "Vendor - Name 1": 4,
             "Vendor - Name 2": 2,
             "Vendor - Address - Street": 3,
             "Vendor - Address - Number": 2,
-            "Vendor - Address - ZIP Code": 3,
-            "Vendor - Address - City": 3,
+            "Vendor - Address - ZIP Code": 4,  # Increased weight for ZIP
+            "Vendor - Address - City": 4,      # Increased weight for city
             "Vendor - Address - Country": 3,
             "Vendor - Address - Region": 1,
         }
@@ -299,13 +240,8 @@ class EnhancedPDFMatcher:
                 else:
                     normalized = str(value).lower()
                     
-                # Special handling for different field types
-                if field == "Vendor - Address - Street":
-                    for pattern, replacement in self.STREET_SUFFIXES.items():
-                        normalized = re.sub(pattern, replacement, normalized, flags=re.IGNORECASE)
-                elif field == "Vendor - Address - Country":
-                    normalized = self.normalize_country(normalized)
-                elif field == "Delivery Note Date":
+                # Special handling for dates
+                if field == "Delivery Note Date":
                     # Extract just the date part from datetime strings
                     if 'T' in normalized:
                         normalized = normalized.split('T')[0]
@@ -321,7 +257,7 @@ class EnhancedPDFMatcher:
         return sap_entries
 
     def match_page_to_sap(self, pdf_text: str, sap_entries: List[Dict], page_num: int) -> Optional[Dict]:
-        """Match a PDF page to SAP entries with enhanced fuzzy matching"""
+        """Match a PDF page to SAP entries with stricter fuzzy matching"""
         extracted_dates = self.extract_dates(pdf_text)
         extracted_delivery_notes = self.extract_delivery_notes(pdf_text)
         extracted_address = self.extract_address_components(pdf_text)
@@ -337,16 +273,16 @@ class EnhancedPDFMatcher:
             for field, normalized_value in sap_entry['normalized'].items():
                 field_weight = sap_entry['weights'][field]
                 
-                # Date matching
+                # Date matching with stricter criteria
                 if field == "Delivery Note Date":
                     date_str = normalized_value[:10] if len(normalized_value) >= 10 else normalized_value
                     if date_str in extracted_dates:
                         score += field_weight
                         match_details[field] = f"Exact match: {date_str}"
                     else:
-                        # Fuzzy date matching
+                        # Fuzzy date matching with higher threshold
                         for extracted_date in extracted_dates:
-                            is_match, ratio = self.fuzzy_match_enhanced(date_str, extracted_date, 0.8)
+                            is_match, ratio = self.fuzzy_match_enhanced(date_str, extracted_date, 0.85)
                             if is_match:
                                 score += field_weight * ratio
                                 match_details[field] = f"Fuzzy match: {extracted_date} (ratio: {ratio:.3f})"
@@ -355,11 +291,11 @@ class EnhancedPDFMatcher:
                             match_details[field] = "Not matched"
                     continue
                 
-                # Delivery Note Number matching
+                # Delivery Note Number matching - most critical field
                 if field == "Delivery Note Number":
                     matched = False
                     for extracted_note in extracted_delivery_notes:
-                        is_match, ratio = self.fuzzy_match_enhanced(normalized_value, extracted_note, 0.7)
+                        is_match, ratio = self.fuzzy_match_enhanced(normalized_value, extracted_note, 0.85)
                         if is_match:
                             score += field_weight * ratio
                             match_details[field] = f"Fuzzy match: '{extracted_note}' (ratio: {ratio:.3f})"
@@ -367,19 +303,19 @@ class EnhancedPDFMatcher:
                             break
                     
                     if not matched:
-                        # Fallback to simple text search
+                        # Fallback to simple text search with exact match only
                         if normalized_value in pdf_text:
-                            score += field_weight * 0.8
+                            score += field_weight * 0.9
                             match_details[field] = f"Text found: {normalized_value}"
                         else:
                             match_details[field] = "Not matched"
                     continue
                 
-                # Street matching
+                # Street matching with higher threshold
                 if field == "Vendor - Address - Street":
                     matched = False
                     for doc_street in extracted_address["STREET"]:
-                        is_match, ratio = self.fuzzy_match_enhanced(normalized_value, doc_street, 0.6)
+                        is_match, ratio = self.fuzzy_match_enhanced(normalized_value, doc_street, 0.75)
                         if is_match:
                             score += field_weight * ratio
                             match_details[field] = f"Fuzzy match: '{doc_street}' (ratio: {ratio:.3f})"
@@ -390,11 +326,11 @@ class EnhancedPDFMatcher:
                         match_details[field] = "Not matched"
                     continue
                 
-                # City matching
+                # City matching with higher threshold
                 if field == "Vendor - Address - City":
                     matched = False
                     for city in extracted_address["CITY"]:
-                        is_match, ratio = self.fuzzy_match_enhanced(normalized_value, city, 0.8)
+                        is_match, ratio = self.fuzzy_match_enhanced(normalized_value, city, 0.85)
                         if is_match:
                             score += field_weight * ratio
                             match_details[field] = f"Fuzzy match: '{city}' (ratio: {ratio:.3f})"
@@ -405,13 +341,14 @@ class EnhancedPDFMatcher:
                         match_details[field] = "Not matched"
                     continue
                 
-                # Country matching
+                # Country matching - simplified
                 if field == "Vendor - Address - Country":
                     matched = False
                     for country in extracted_address["COUNTRY"]:
-                        if normalized_value == country:
-                            score += field_weight
-                            match_details[field] = f"Exact match: {country}"
+                        is_match, ratio = self.fuzzy_match_enhanced(normalized_value, country, 0.8)
+                        if is_match:
+                            score += field_weight * ratio
+                            match_details[field] = f"Fuzzy match: '{country}' (ratio: {ratio:.3f})"
                             matched = True
                             break
                     
@@ -419,7 +356,7 @@ class EnhancedPDFMatcher:
                         match_details[field] = "Not matched"
                     continue
                 
-                # ZIP Code matching
+                # ZIP Code matching - exact match preferred
                 if field == "Vendor - Address - ZIP Code":
                     matched = False
                     for zip_code in extracted_address["ZIP_CODE"]:
@@ -428,42 +365,41 @@ class EnhancedPDFMatcher:
                             match_details[field] = f"Exact match: {zip_code}"
                             matched = True
                             break
+                        else:
+                            # Allow fuzzy matching for ZIP codes too
+                            is_match, ratio = self.fuzzy_match_enhanced(normalized_value, zip_code, 0.9)
+                            if is_match:
+                                score += field_weight * ratio
+                                match_details[field] = f"Fuzzy match: {zip_code} (ratio: {ratio:.3f})"
+                                matched = True
+                                break
                     
                     if not matched:
                         match_details[field] = "Not matched"
                     continue
                 
-                # Generic field matching with fuzzy support
+                # Generic field matching with stricter fuzzy support
                 if normalized_value in pdf_text:
                     score += field_weight
                     match_details[field] = f"Exact match: {normalized_value}"
                 else:
-                    # Try fuzzy matching for text fields
+                    # Try fuzzy matching for text fields with higher threshold
                     words = pdf_text.split()
                     best_word_match = 0
                     best_word = ""
                     
                     for word in words:
-                        if len(word) > 3:  # Only check reasonably long words
-                            is_match, ratio = self.fuzzy_match_enhanced(normalized_value, word, 0.7)
+                        if len(word) > 4:  # Only check longer words
+                            is_match, ratio = self.fuzzy_match_enhanced(normalized_value, word, 0.8)
                             if is_match and ratio > best_word_match:
                                 best_word_match = ratio
                                 best_word = word
                     
                     if best_word_match > 0:
-                        score += field_weight * best_word_match * 0.7  # Reduce score for fuzzy matches
+                        score += field_weight * best_word_match * 0.7
                         match_details[field] = f"Fuzzy match: '{best_word}' (ratio: {best_word_match:.3f})"
                     else:
-                        # Try token-based partial matching
-                        tokens = normalized_value.split()
-                        matched_tokens = sum(1 for token in tokens if token in pdf_text and len(token) > 2)
-                        
-                        if matched_tokens > 0:
-                            partial_score = field_weight * (matched_tokens / len(tokens)) * 0.5
-                            score += partial_score
-                            match_details[field] = f"Partial match ({matched_tokens}/{len(tokens)} tokens)"
-                        else:
-                            match_details[field] = "Not matched"
+                        match_details[field] = "Not matched"
             
             if score > best_score:
                 best_score = score
@@ -481,8 +417,54 @@ class EnhancedPDFMatcher:
             }
         } if best_entry else None
 
-    def process_pdf(self, pdf_path: str, sap_file: str, output_path: str, threshold: float = 4.0):
-        """Main processing function"""
+    def select_files(self):
+        """Open file dialogs to select input and output files"""
+        root = tk.Tk()
+        root.withdraw()  # Hide the main window
+        
+        try:
+            # Select PDF file
+            pdf_path = filedialog.askopenfilename(
+                title="Select PDF file",
+                filetypes=[("PDF files", "*.pdf"), ("All files", "*.*")]
+            )
+            if not pdf_path:
+                print("No PDF file selected. Exiting.")
+                return None
+            
+            # Select SAP JSON file
+            sap_file = filedialog.askopenfilename(
+                title="Select SAP JSON file",
+                filetypes=[("JSON files", "*.json"), ("All files", "*.*")]
+            )
+            if not sap_file:
+                print("No SAP JSON file selected. Exiting.")
+                return None
+            
+            # Select output file location
+            output_path = filedialog.asksaveasfilename(
+                title="Save results as",
+                defaultextension=".json",
+                filetypes=[("JSON files", "*.json"), ("All files", "*.*")]
+            )
+            if not output_path:
+                print("No output file selected. Exiting.")
+                return None
+            
+            return {
+                'pdf_path': pdf_path,
+                'sap_file': sap_file,
+                'output_path': output_path
+            }
+            
+        except Exception as e:
+            print(f"Error selecting files: {e}")
+            return None
+        finally:
+            root.destroy()
+
+    def process_pdf(self, pdf_path: str, sap_file: str, output_path: str, threshold: float = 15.0):
+        """Main processing function with higher default threshold"""
         print("Loading SAP data...")
         with open(sap_file, 'r', encoding='utf-8') as f:
             sap_data = json.load(f)
@@ -547,27 +529,31 @@ class EnhancedPDFMatcher:
 
 
 def main():
-   
-
-    config = {
-        'pdf_path': r"C:\projects\hackathon_ScienceHack\BECONEX_challenge_materials_samples\batch_1_2017_2018.pdf",
-        'sap_file': r"C:\projects\hackathon_ScienceHack\BECONEX_challenge_materials_samples\SAP_data.json", 
-        'output_path': r"C:\projects\hackathon_ScienceHack\output_2017.json",
-        # POSSIBLE TO CHANGE IF ITS TOO LOW OR TOO HIGH
-        'threshold': 10.0  # Minimum matching score threshold
-    }
-    
     print("="*80)
-    print("ENHANCED PDF MATCHER")
-    print("="*80)
-    print(f"PDF file: {config['pdf_path']}")
-    print(f"SAP file: {config['sap_file']}")
-    print(f"Output file: {config['output_path']}")
-    print(f"Threshold: {config['threshold']}")
+    print("IMPROVED PDF MATCHER WITH FILE SELECTION")
     print("="*80)
     
     # Initialize matcher
     matcher = EnhancedPDFMatcher()
+    
+    # Select files using GUI
+    config = matcher.select_files()
+    if not config:
+        return
+    
+    print(f"PDF file: {config['pdf_path']}")
+    print(f"SAP file: {config['sap_file']}")
+    print(f"Output file: {config['output_path']}")
+    
+    # Ask for threshold
+    try:
+        threshold_input = input("\nEnter matching threshold (default 15.0, higher = stricter): ").strip()
+        threshold = float(threshold_input) if threshold_input else 15.0
+    except ValueError:
+        threshold = 15.0
+    
+    print(f"Using threshold: {threshold}")
+    print("="*80)
     
     # Process PDF
     try:
@@ -575,13 +561,13 @@ def main():
             config['pdf_path'],
             config['sap_file'], 
             config['output_path'],
-            config['threshold']
+            threshold
         )
         
         # Display summary
         if results:
             print(f"\nTop matches:")
-            for result in sorted(results, key=lambda x: x['match_score'], reverse=True)[:3]:
+            for result in sorted(results, key=lambda x: x['match_score'], reverse=True)[:5]:
                 print(f"  Page {result['page_number']}: {result['Delivery Note Number']} (score: {result['match_score']:.2f})")
         
     except Exception as e:
