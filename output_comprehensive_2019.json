@@ -1,0 +1,228 @@
+[
+    {
+        "page_number": 1,
+        "Delivery Note Number": "LS19037829",
+        "UID": "5049000884_2019",
+        "match_score": 24,
+        "match_details": {
+            "Delivery Note Number": "Matched: ls19037829",
+            "Delivery Note Date": "Matched: 2019-07-12",
+            "Vendor - Name 1": "Matched: silkes weinkeller gmbh",
+            "Vendor - Address - Street": "Matched: d",
+            "Vendor - Address - Number": "Matched: 9",
+            "Vendor - Address - ZIP Code": "Matched: 40822",
+            "Vendor - Address - City": "Matched: mettmann",
+            "Vendor - Address - Country": "Not matched"
+        }
+    },
+    {
+        "page_number": 2,
+        "Delivery Note Number": "LS19037829",
+        "UID": "5049000884_2019",
+        "match_score": 13,
+        "match_details": {
+            "Delivery Note Number": "Matched: ls19037829",
+            "Delivery Note Date": "Matched: 2019-07-12",
+            "Vendor - Name 1": "Matched: silkes weinkeller gmbh",
+            "Vendor - Address - Street": "Not matched",
+            "Vendor - Address - Number": "Not matched",
+            "Vendor - Address - ZIP Code": "Not matched",
+            "Vendor - Address - City": "Not matched",
+            "Vendor - Address - Country": "Not matched"
+        }
+    },
+    {
+        "page_number": 3,
+        "Delivery Note Number": "709 024 7953",
+        "UID": "5049000976_2020",
+        "match_score": 25,
+        "match_details": {
+            "Delivery Note Number": "Matched: 709 024 7953",
+            "Delivery Note Date": "Matched: 2020-12-30",
+            "Vendor - Name 1": "Matched: vodafone gmbh bei arvato distribution gmbh",
+            "Vendor - Name 2": "Matched: warenannahme 30",
+            "Vendor - Address - Street": "Matched: d",
+            "Vendor - Address - Number": "Matched: 45",
+            "Vendor - Address - ZIP Code": "Matched: 33428",
+            "Vendor - Address - City": "Matched: marienfeld",
+            "Vendor - Address - Country": "Not matched"
+        }
+    },
+    {
+        "page_number": 4,
+        "Delivery Note Number": "708 985 9234",
+        "UID": "5049000969_2020",
+        "match_score": 22,
+        "match_details": {
+            "Delivery Note Number": "Matched: 708 985 9234",
+            "Delivery Note Date": "Matched: 2020-11-19",
+            "Vendor - Name 1": "Matched: vodafone gmbh bei arvato distribution gmbh",
+            "Vendor - Name 2": "Matched: warenannahme 30",
+            "Vendor - Address - Street": "Matched: de",
+            "Vendor - Address - Number": "Matched: 45",
+            "Vendor - Address - ZIP Code": "Matched: 33428",
+            "Vendor - Address - City": "Not matched",
+            "Vendor - Address - Country": "Not matched"
+        }
+    },
+    {
+        "page_number": 5,
+        "Delivery Note Number": "40433-001",
+        "UID": "5049000927_2020",
+        "match_score": 21.4,
+        "match_details": {
+            "Delivery Note Number": "Matched: 40433-001",
+            "Delivery Note Date": "Matched: 2020-05-26",
+            "Vendor - Name 1": "Partial (1/2 tokens)",
+            "Vendor - Address - Street": "Matched: de",
+            "Vendor - Address - Number": "Matched: 2",
+            "Vendor - Address - ZIP Code": "Matched: 31319",
+            "Vendor - Address - City": "Not matched",
+            "Vendor - Address - Country": "Matched: deutschland"
+        }
+    },
+    {
+        "page_number": 6,
+        "Delivery Note Number": 376056622,
+        "UID": "5049000911_2019",
+        "match_score": 19,
+        "match_details": {
+            "Delivery Note Number": "Not matched",
+            "Delivery Note Date": "Matched: 2019-12-06",
+            "Vendor - Name 1": "Matched: alternate gmbh",
+            "Vendor - Address - Street": "Matched: philipp-reis",
+            "Vendor - Address - Number": "Matched: 2-3",
+            "Vendor - Address - ZIP Code": "Matched: 35440",
+            "Vendor - Address - City": "Matched: linden",
+            "Vendor - Address - Country": "Not matched"
+        }
+    },
+    {
+        "page_number": 8,
+        "Delivery Note Number": 1315749502,
+        "UID": "5049000864_2019",
+        "match_score": 9,
+        "match_details": {
+            "Delivery Note Number": "Not matched",
+            "Delivery Note Date": "Not matched",
+            "Vendor - Name 1": "Matched: konica minolta business solutions deutschland gmbh",
+            "Vendor - Address - Street": "Not matched",
+            "Vendor - Address - Number": "Matched: 17",
+            "Vendor - Address - ZIP Code": "Not matched",
+            "Vendor - Address - City": "Not matched",
+            "Vendor - Address - Country": "Matched: deutschland"
+        }
+    },
+    {
+        "page_number": 9,
+        "Delivery Note Number": "LS-19-1007067",
+        "UID": "5049000905_2019",
+        "match_score": 24,
+        "match_details": {
+            "Delivery Note Number": "Matched: ls-19-1007067",
+            "Delivery Note Date": "Matched: 2019-12-02",
+            "Vendor - Name 1": "Matched: phs-electronic gmbh",
+            "Vendor - Address - Street": "Matched: l",
+            "Vendor - Address - Number": "Matched: 5",
+            "Vendor - Address - ZIP Code": "Matched: 97424",
+            "Vendor - Address - City": "Matched: schweinfurt",
+            "Vendor - Address - Country": "Not matched"
+        }
+    },
+    {
+        "page_number": 10,
+        "Delivery Note Number": 6060857244,
+        "UID": "5049000937_2020",
+        "match_score": 21,
+        "match_details": {
+            "Delivery Note Number": "Matched: 6060857244",
+            "Delivery Note Date": "Matched: 2020-05-27",
+            "Vendor - Name 1": "Matched: cyberport gmbh",
+            "Vendor - Address - Street": "Matched: am brauhaus 5",
+            "Vendor - Address - Number": "Matched: 5",
+            "Vendor - Address - ZIP Code": "Not matched",
+            "Vendor - Address - City": "Matched: dresden",
+            "Vendor - Address - Country": "Not matched"
+        }
+    },
+    {
+        "page_number": 11,
+        "Delivery Note Number": "201900501866",
+        "UID": "5049000920_2019",
+        "match_score": 24,
+        "match_details": {
+            "Delivery Note Number": "Matched: 201900501866",
+            "Delivery Note Date": "Matched: 2019-12-08",
+            "Vendor - Name 1": "Matched: ifixit gmbh",
+            "Vendor - Address - Street": "Matched: traenkestr. 7",
+            "Vendor - Address - Number": "Matched: 7",
+            "Vendor - Address - ZIP Code": "Matched: 70597",
+            "Vendor - Address - City": "Matched: stuttgart",
+            "Vendor - Address - Country": "Not matched"
+        }
+    },
+    {
+        "page_number": 12,
+        "Delivery Note Number": 22078787,
+        "UID": "5049000959_2020",
+        "match_score": 24,
+        "match_details": {
+            "Delivery Note Number": "Matched: 22078787",
+            "Delivery Note Date": "Matched: 2020-10-19",
+            "Vendor - Name 1": "Matched: tarox marketplace gmbh",
+            "Vendor - Address - Street": "Matched: stellenbachstrare 49",
+            "Vendor - Address - Number": "Matched: 49-51",
+            "Vendor - Address - ZIP Code": "Matched: 44536",
+            "Vendor - Address - City": "Matched: lunen",
+            "Vendor - Address - Country": "Not matched"
+        }
+    },
+    {
+        "page_number": 13,
+        "Delivery Note Number": 70588,
+        "UID": "5049000889_2019",
+        "match_score": 22.240000000000002,
+        "match_details": {
+            "Delivery Note Number": "Matched: 70588",
+            "Delivery Note Date": "Matched: 2019-07-17",
+            "Vendor - Name 1": "Partial (4/5 tokens)",
+            "Vendor - Address - Street": "Matched: tolzer straße. 2",
+            "Vendor - Address - Number": "Matched: 2",
+            "Vendor - Address - ZIP Code": "Matched: 82064",
+            "Vendor - Address - City": "Matched: strafilach",
+            "Vendor - Address - Country": "Not matched"
+        }
+    },
+    {
+        "page_number": 15,
+        "Delivery Note Number": "hd_53799691",
+        "UID": "5049000875_2019",
+        "match_score": 21.4,
+        "match_details": {
+            "Delivery Note Number": "Matched: hd_53799691",
+            "Delivery Note Date": "Matched: 2019-04-05",
+            "Vendor - Name 1": "Partial (1/2 tokens)",
+            "Vendor - Address - Street": "Matched: marburoer straße 2",
+            "Vendor - Address - Number": "Matched: 2",
+            "Vendor - Address - ZIP Code": "Matched: 57334",
+            "Vendor - Address - City": "Matched: bad laasohe",
+            "Vendor - Address - Country": "Not matched"
+        }
+    },
+    {
+        "page_number": 16,
+        "Delivery Note Number": 120961772,
+        "UID": "5049000948_2020",
+        "match_score": 27,
+        "match_details": {
+            "Delivery Note Number": "Matched: 120961772",
+            "Delivery Note Date": "Matched: 2020-10-15",
+            "Vendor - Name 1": "Matched: jacob elektronik gmbh",
+            "Vendor - Address - Street": "Matched: an der",
+            "Vendor - Address - Number": "Matched: 5",
+            "Vendor - Address - ZIP Code": "Matched: 76229",
+            "Vendor - Address - City": "Matched: karlsruhe",
+            "Vendor - Address - Country": "Matched: deutschland"
+        }
+    }
+]

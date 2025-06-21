@@ -78,8 +78,8 @@ STREET_SUFFIXES = {
     r'\bstr\b': 'straße',
     r'\bpl\b': 'platz',
     r'\bstr\.\b': 'straße',
-    r'\bschlosspl\b': 'schlossplatz',
-    r'\bburgstr\b': 'burgstraße'
+    # r'\bschlosspl\b': 'schlossplatz',
+    # r'\bburgstr\b': 'burgstraße'
 }
 
 # def extract_dates(text):
