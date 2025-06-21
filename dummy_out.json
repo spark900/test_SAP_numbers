@@ -1,0 +1,120 @@
+[
+    {
+        "page_number": 1,
+        "Delivery Note Number": "123_b_777",
+        "UID": "1_2025",
+        "match_score": 10.036129032258064,
+        "match_details": {
+            "Delivery Note Number": "Not matched",
+            "Delivery Note Date": "Not matched",
+            "Vendor - Name 1": "Fuzzy match: 'ielfirma' (ratio: 0.900)",
+            "Vendor - Address - Street": "Fuzzy match: 'schloss street raße 1' (ratio: 0.839)",
+            "Vendor - Address - Number": "Exact match: 1",
+            "Vendor - Address - ZIP Code": "Not matched",
+            "Vendor - Address - City": "Not matched",
+            "Vendor - Address - Country": "Exact match: germany"
+        },
+        "extracted_data": {
+            "dates": [],
+            "delivery_notes": [
+                "123_b 777 datum 2023 2 9 datum 2024 10 1 firma beisp ielfirma _a"
+            ],
+            "streets": [
+                "liefernummer",
+                "80803 munich",
+                "schloss street raße 1",
+                "germany",
+                "1 schloss street raße",
+                "datum",
+                "invoice  1",
+                "777 datum",
+                "9 datum",
+                "beisp ielfirma",
+                "firma",
+                "1 firma",
+                "dummy",
+                "munich"
+            ],
+            "cities": [
+                "liefernummer",
+                "germany",
+                "datum",
+                "beisp ielfirma",
+                "firma",
+                "schloss st raße",
+                "dummy",
+                "munich",
+                "invoice"
+            ],
+            "zip_codes": [
+                "80803",
+                "2024",
+                "2023"
+            ],
+            "countries": [
+                "germany"
+            ]
+        }
+    },
+    {
+        "page_number": 2,
+        "Delivery Note Number": "43923-4",
+        "UID": "3_2025",
+        "match_score": 6.276470588235294,
+        "match_details": {
+            "Delivery Note Number": "Not matched",
+            "Delivery Note Date": "Not matched",
+            "Vendor - Address - Street": "Fuzzy match: '4th street' (ratio: 0.900)",
+            "Vendor - Address - ZIP Code": "Not matched",
+            "Vendor - Address - City": "Fuzzy match: 'milwaukee' (ratio: 1.000)",
+            "Vendor - Address - Country": "Not matched",
+            "Vendor - Address - Region": "Fuzzy match: 'wisconsi' (ratio: 0.824)"
+        },
+        "extracted_data": {
+            "dates": [],
+            "delivery_notes": [
+                "1 10000 0023 79572 random number 2 49948954"
+            ],
+            "streets": [
+                "dummy in voice  2",
+                "street",
+                "wisconsi n",
+                "random number 1",
+                "random number 2",
+                "milwaukee",
+                "79572 random number",
+                "delivery num ber",
+                "datum",
+                "united sta tes",
+                "beisp ielfirma",
+                "9 datum",
+                "4th street",
+                "firma",
+                "9234 random number",
+                "1 firma",
+                "2 datum"
+            ],
+            "cities": [
+                "wisconsi",
+                "street",
+                "dummy in voice",
+                "milwaukee",
+                "delivery num ber",
+                "datum",
+                "united sta tes",
+                "beisp ielfirma",
+                "firma",
+                "random number"
+            ],
+            "zip_codes": [
+                "0023",
+                "10000",
+                "9234",
+                "79572",
+                "2024",
+                "2023"
+            ],
+            "countries": []
+        }
+    }
+]

@@ -1,0 +1,62 @@
+[{
+        "MBLNR": 1,
+        "MJAHR": 2025,
+        "Purchase Order Number": 1.1,
+        "Delivery Note Number": "123_b_777",
+        "Delivery Note Date": "2023-02-06T00:00:00.000",
+        "Vendor - Name 1": "bespielfirma a",
+        "Vendor - Name 2": null,
+        "Vendor - Address - Street": "Schlossstraße",
+        "Vendor - Address - Number": "1",
+        "Vendor - Address - ZIP Code": "80804",
+        "Vendor - Address - City": "Linden",
+        "Vendor - Address - Country": "Deutschland",
+        "Vendor - Address - Region": null
+    }, 
+
+    {
+        "MBLNR": 2,
+        "MJAHR": 2017,
+        "Purchase Order Number": 1.1,
+        "Delivery Note Number": "b_777",
+        "Delivery Note Date": "2023-02-09T00:00:00.000",
+        "Vendor - Name 1": "bespielfirma A",
+        "Vendor - Name 2": null,
+        "Vendor - Address - Street": "Schloss strasse",
+        "Vendor - Address - Number": null,
+        "Vendor - Address - ZIP Code": 80803,
+        "Vendor - Address - City": "München",
+        "Vendor - Address - Country": null,
+        "Vendor - Address - Region": null
+    }, 
+    {
+        "MBLNR": 3,
+        "MJAHR": 2025,
+        "Purchase Order Number": 1.2,
+        "Delivery Note Number": "43923-4",
+        "Delivery Note Date": "2023-02-09T00:00:00.000",
+        "Vendor - Name 1": null,
+        "Vendor - Name 2": null,
+        "Vendor - Address - Street": "4th",
+        "Vendor - Address - Number": null,
+        "Vendor - Address - ZIP Code": "80804",
+        "Vendor - Address - City": "Milwaukee",
+        "Vendor - Address - Country": "USA",
+        "Vendor - Address - Region": "Wisconisn"
+    },
+    {
+        "MBLNR": 4,
+        "MJAHR": 2025,
+        "Purchase Order Number": 1.3,
+        "Delivery Note Number": "xyz",
+        "Delivery Note Date": "2025-02-12",
+        "Vendor - Name 1": "bespielfirma a",
+        "Vendor - Name 2": null,
+        "Vendor - Address - Street": "Am Burggraben",
+        "Vendor - Address - Number": "90",
+        "Vendor - Address - ZIP Code": "80803",
+        "Vendor - Address - City": "Munich",
+        "Vendor - Address - Country": null,
+        "Vendor - Address - Region": null
+    }
+]

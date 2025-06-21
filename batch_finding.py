@@ -29,8 +29,8 @@ def extract_text_from_pdf_by_page(pdf_path):
 # ... [keep all your existing functions and variables unchanged] ...
 
 # Set paths
-pdf_path = r"C:\projects\hackathon_ScienceHack\BECONEX_challenge_materials_samples\batch_2_2019_2020.pdf"
-output_path = r"C:\projects\hackathon_ScienceHack\output_comprehensive_2019.json"
+pdf_path = r"C:\projects\hackathon_ScienceHack\dummy_invoices.pdf"
+output_path = r"C:\projects\hackathon_ScienceHack\dummy_out.json"
 
 # Process PDF by pages
 results = []
@@ -61,6 +61,7 @@ for page_num, pdf_text in enumerate(pdf_texts, start=1):
         r'\b\d{4}/\d{2}/\d{2}\b',       # YYYY/MM/DD
         r'\b\d{1,2}\s+[A-Za-z]{3,10}\s+\d{4}\b',  # 01 January 2023
         r'\b[A-Za-z]{3,10}\s+\d{1,2},\s+\d{4}\b',  # January 01, 2023
+        # rauswerfen vllt.
         r'\b\d{8}\b'                     # YYYYMMDD
     ]
     # Parse a string into a datetime.date (fuzzy)
@@ -207,7 +208,8 @@ for page_num, pdf_text in enumerate(pdf_texts, start=1):
             components["ZIP_CODE"].update(matches)
         
         # Extract countries
-        country_pattern = r'\b(deutschland|germany|österreich|austria|schweiz|switzerland|italia|italy|france|spanien|spain)\b'
+        # reconsider
+        country_pattern = r'\b(deutschland|germany|österreich|austria|schweiz|switzerland|italia|italy|france|spanien|spain|USA|United States)\b'
         matches = re.findall(country_pattern, text, flags=re.IGNORECASE)
         components["COUNTRY"].update(match.strip().lower() for match in matches)
         
@@ -218,7 +220,8 @@ for page_num, pdf_text in enumerate(pdf_texts, start=1):
         return SequenceMatcher(None, str1, str2).ratio() >= threshold
 
     # Load SAP data
-    sap_file = r"C:\projects\hackathon_ScienceHack\BECONEX_challenge_materials_samples\SAP_data.json"
+    # sap_file = r"C:\projects\hackathon_ScienceHack\BECONEX_challenge_materials_samples\SAP_data.json"
+    sap_file = r"C:\projects\hackathon_ScienceHack\DUMMY_SAP.json"
     with open(sap_file, encoding='utf-8') as f:
         sap_data = json.load(f)
 
@@ -269,12 +272,13 @@ for page_num, pdf_text in enumerate(pdf_texts, start=1):
         })
 
     # Set paths
-    pdf_path = r"C:\projects\hackathon_ScienceHack\BECONEX_challenge_materials_samples\batch_2_2019_2020.pdf"  # Single PDF file
-    output_path = r"C:\projects\hackathon_ScienceHack\output_comprehensive_2019.json"
+    pdf_path = r"C:\projects\hackathon_ScienceHack\dummy_invoices.pdf"  # Single PDF file
+    output_path = r"C:\projects\hackathon_ScienceHack\dummy_out.json"
 
     # Process PDF by pages
     results = []
-    threshold = 8
+    # CHANGE TRESHOLD ACCORDINGLY, FOR VERY LOW TRESHOLD MISMATCHING POSSIBLE!
+    threshold = 3
 
     # Extract all pages from the PDF
     pdf_texts = extract_text_from_pdf_by_page(pdf_path)  # Assuming this function exists and returns a list of page texts

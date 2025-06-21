@@ -1,0 +1,238 @@
+[
+    {
+        "page_number": 1,
+        "Delivery Note Number": "FDE10679992-L1",
+        "UID": "5049001181_2022",
+        "match_score": 24,
+        "match_details": {
+            "Delivery Note Number": "Matched: fde10679992-l1",
+            "Delivery Note Date": "Matched: 2022-07-19",
+            "Vendor - Name 1": "Matched: internetstores gmbh",
+            "Vendor - Address - Street": "Matched: i",
+            "Vendor - Address - Number": "Matched: 6",
+            "Vendor - Address - ZIP Code": "Matched: 70174",
+            "Vendor - Address - City": "Matched: stuttgart",
+            "Vendor - Address - Country": "Not matched"
+        }
+    },
+    {
+        "page_number": 2,
+        "Delivery Note Number": "709 434 8132",
+        "UID": "5049001126_2022",
+        "match_score": 25,
+        "match_details": {
+            "Delivery Note Number": "Matched: 709 434 8132",
+            "Delivery Note Date": "Matched: 2022-03-17",
+            "Vendor - Name 1": "Matched: vodafone gmbh bei arvato scs se",
+            "Vendor - Name 2": "Matched: warenannahme 30",
+            "Vendor - Address - Street": "Matched: d",
+            "Vendor - Address - Number": "Matched: 45",
+            "Vendor - Address - ZIP Code": "Matched: 33428",
+            "Vendor - Address - City": "Matched: marienfeld",
+            "Vendor - Address - Country": "Not matched"
+        }
+    },
+    {
+        "page_number": 3,
+        "Delivery Note Number": "708 985 9234",
+        "UID": "5049000969_2020",
+        "match_score": 12.35,
+        "match_details": {
+            "Delivery Note Number": "Not matched",
+            "Delivery Note Date": "Not matched",
+            "Vendor - Name 1": "Matched: vodafone gmbh bei arvato distribution gmbh",
+            "Vendor - Name 2": "Partial (1/2 tokens)",
+            "Vendor - Address - Street": "Matched: bielefelder straße. 45",
+            "Vendor - Address - Number": "Matched: 45",
+            "Vendor - Address - ZIP Code": "Matched: 33428",
+            "Vendor - Address - City": "Not matched",
+            "Vendor - Address - Country": "Not matched"
+        }
+    },
+    {
+        "page_number": 4,
+        "Delivery Note Number": 717051276,
+        "UID": "5049001197_2022",
+        "match_score": 19,
+        "match_details": {
+            "Delivery Note Number": "Matched: 717051276",
+            "Delivery Note Date": "Matched: 2022-09-15",
+            "Vendor - Name 1": "Matched: office discount gmbh",
+            "Vendor - Address - ZIP Code": "Matched: 85374",
+            "Vendor - Address - City": "Matched: neufahrn",
+            "Vendor - Address - Country": "Not matched"
+        }
+    },
+    {
+        "page_number": 5,
+        "Delivery Note Number": 717051276,
+        "UID": "5049001197_2022",
+        "match_score": 16,
+        "match_details": {
+            "Delivery Note Number": "Matched: 717051276",
+            "Delivery Note Date": "Matched: 2022-09-15",
+            "Vendor - Name 1": "Matched: office discount gmbh",
+            "Vendor - Address - ZIP Code": "Matched: 85374",
+            "Vendor - Address - City": "Not matched",
+            "Vendor - Address - Country": "Not matched"
+        }
+    },
+    {
+        "page_number": 6,
+        "Delivery Note Number": "7781925638914",
+        "UID": "5049001139_2022",
+        "match_score": 14.8,
+        "match_details": {
+            "Delivery Note Number": "Not matched",
+            "Delivery Note Date": "Matched: 2022-05-10",
+            "Vendor - Name 1": "Partial (5/5 tokens)",
+            "Vendor - Address - Street": "Matched: berliner aliee 2",
+            "Vendor - Address - Number": "Matched: 2",
+            "Vendor - Address - ZIP Code": "Matched: 40212",
+            "Vendor - Address - City": "Not matched",
+            "Vendor - Address - Country": "Not matched"
+        }
+    },
+    {
+        "page_number": 7,
+        "Delivery Note Number": 22041622,
+        "UID": "5049001150_2022",
+        "match_score": 22.8,
+        "match_details": {
+            "Delivery Note Number": "Matched: 22041622",
+            "Delivery Note Date": "Matched: 2022-06-07",
+            "Vendor - Name 1": "Partial (5/5 tokens)",
+            "Vendor - Address - Street": "Matched: siemensstrasse 7",
+            "Vendor - Address - Number": "Matched: 7",
+            "Vendor - Address - ZIP Code": "Matched: 45659",
+            "Vendor - Address - City": "Matched: recklinghausen",
+            "Vendor - Address - Country": "Not matched"
+        }
+    },
+    {
+        "page_number": 8,
+        "Delivery Note Number": 240139360,
+        "UID": "5049001135_2022",
+        "match_score": 24,
+        "match_details": {
+            "Delivery Note Number": "Matched: 240139360",
+            "Delivery Note Date": "Matched: 2022-04-25",
+            "Vendor - Name 1": "Matched: d-trust gmbh",
+            "Vendor - Address - Street": "Matched: kommandantenstr. 15",
+            "Vendor - Address - Number": "Matched: 15",
+            "Vendor - Address - ZIP Code": "Matched: 10969",
+            "Vendor - Address - City": "Matched: berlin",
+            "Vendor - Address - Country": "Not matched"
+        }
+    },
+    {
+        "page_number": 9,
+        "Delivery Note Number": 8143,
+        "UID": "5049001192_2022",
+        "match_score": 22.240000000000002,
+        "match_details": {
+            "Delivery Note Number": "Matched: 8143",
+            "Delivery Note Date": "Matched: 2022-08-17",
+            "Vendor - Name 1": "Partial (4/5 tokens)",
+            "Vendor - Address - Street": "Matched: telzer straße. 2",
+            "Vendor - Address - Number": "Matched: 2",
+            "Vendor - Address - ZIP Code": "Matched: 82064",
+            "Vendor - Address - City": "Matched: strafilach",
+            "Vendor - Address - Country": "Not matched"
+        }
+    },
+    {
+        "page_number": 10,
+        "Delivery Note Number": 8317184,
+        "UID": "5049001165_2022",
+        "match_score": 16.1,
+        "match_details": {
+            "Delivery Note Number": "Matched: 8317184",
+            "Delivery Note Date": "Matched: 2022-06-23",
+            "Vendor - Name 1": "Partial (3/4 tokens)",
+            "Vendor - Address - Street": "Not matched",
+            "Vendor - Address - Number": "Matched: 61",
+            "Vendor - Address - ZIP Code": "Matched: 4906",
+            "Vendor - Address - City": "Not matched",
+            "Vendor - Address - Country": "Not matched"
+        }
+    },
+    {
+        "page_number": 11,
+        "Delivery Note Number": "A2022062305862501",
+        "UID": "5049001173_2022",
+        "match_score": 12,
+        "match_details": {
+            "Delivery Note Number": "Matched: a2022062305862501",
+            "Delivery Note Date": "Not matched",
+            "Vendor - Name 1": "Matched: datev eg",
+            "Vendor - Address - ZIP Code": "Matched: 90329",
+            "Vendor - Address - City": "Not matched",
+            "Vendor - Address - Country": "Not matched"
+        }
+    },
+    {
+        "page_number": 12,
+        "Delivery Note Number": "Amazon VCS Bestellung",
+        "UID": "5049001211_2022",
+        "match_score": 19.8,
+        "match_details": {
+            "Delivery Note Number": "Matched: amazon vcs bestellung",
+            "Delivery Note Date": "Matched: 2022-09-21",
+            "Vendor - Name 1": "Partial (3/3 tokens)",
+            "Vendor - Address - Street": "Matched: august-bebel",
+            "Vendor - Address - Number": "Matched: 26",
+            "Vendor - Address - ZIP Code": "Not matched",
+            "Vendor - Address - City": "Matched: grafenhainichen",
+            "Vendor - Address - Country": "Not matched"
+        }
+    },
+    {
+        "page_number": 13,
+        "Delivery Note Number": "AUF-DF-1507558",
+        "UID": "5049001115_2022",
+        "match_score": 12.7,
+        "match_details": {
+            "Delivery Note Number": "Matched: auf-df-1507558",
+            "Delivery Note Date": "Matched: 2022-03-05",
+            "Vendor - Name 1": "Partial (1/4 tokens)",
+            "Vendor - Address - Street": "Not matched",
+            "Vendor - Address - Number": "Not matched",
+            "Vendor - Address - ZIP Code": "Not matched",
+            "Vendor - Address - City": "Not matched",
+            "Vendor - Address - Country": "Matched: deutschland"
+        }
+    },
+    {
+        "page_number": 14,
+        "Delivery Note Number": "AUF-DF-1507558",
+        "UID": "5049001115_2022",
+        "match_score": 14.1,
+        "match_details": {
+            "Delivery Note Number": "Matched: auf-df-1507558",
+            "Delivery Note Date": "Matched: 2022-03-05",
+            "Vendor - Name 1": "Partial (3/4 tokens)",
+            "Vendor - Address - Street": "Not matched",
+            "Vendor - Address - Number": "Not matched",
+            "Vendor - Address - ZIP Code": "Not matched",
+            "Vendor - Address - City": "Not matched",
+            "Vendor - Address - Country": "Matched: deutschland"
+        }
+    },
+    {
+        "page_number": 15,
+        "Delivery Note Number": "2022-123649",
+        "UID": "5049001207_2022",
+        "match_score": 24,
+        "match_details": {
+            "Delivery Note Number": "Matched: 2022-123649",
+            "Delivery Note Date": "Matched: 2022-09-20",
+            "Vendor - Name 1": "Matched: schnaeppchenladen24 gmbh",
+            "Vendor - Address - Street": "Matched: aubinger straße5",
+            "Vendor - Address - Number": "Matched: 5",
+            "Vendor - Address - ZIP Code": "Matched: 85737",
+            "Vendor - Address - City": "Matched: ismaning",
+            "Vendor - Address - Country": "Not matched"
+        }
+    }
+]
