@@ -26,9 +26,9 @@ DATE_PATTERNS = [
     r'\b\d{4}/\d{2}/\d{2}\b',       # YYYY/MM/DD
     r'\b\d{1,2}\s+[A-Za-z]{3,10}\s+\d{4}\b',  # 01 January 2023
     r'\b[A-Za-z]{3,10}\s+\d{1,2},\s+\d{4}\b',  # January 01, 2023
-    r'\b\d{8}\b'                     # YYYYMMDDD
+    r'\b\d{8}\b'                     # YYYYMMDD
 ]
-
+#fgf
 # Global ZIP code patterns
 ZIP_PATTERNS = [
     r'\b\d{4,5}\b',          # Standard 4-5 digit ZIP (DE/AT)
