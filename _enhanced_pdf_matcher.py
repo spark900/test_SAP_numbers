@@ -208,8 +208,8 @@ class EnhancedPDFMatcher:
     def preprocess_sap_data(self, sap_data: List[Dict]) -> List[Dict]:
         """Preprocess SAP data for matching"""
         field_weights = {
-            "Delivery Note Number": 10,  # Increased weight for delivery note
-            "Delivery Note Date": 6,     # Increased weight for date
+            "Delivery Note Number": 15,  # Increased weight for delivery note
+            "Delivery Note Date": 5,     # Increased weight for date
             "Vendor - Name 1": 4,
             "Vendor - Name 2": 2,
             "Vendor - Address - Street": 3,
@@ -449,14 +449,14 @@ class EnhancedPDFMatcher:
                     "UID": uid,
                     "match_score": match_result['score'],
                     "match_details": match_result['details'],
-                    "extracted_data": {
-                        "dates": list(match_result['extracted_data']['dates']),
-                        "delivery_notes": list(match_result['extracted_data']['delivery_notes']),
-                        "streets": list(match_result['extracted_data']['address']['STREET']),
-                        "cities": list(match_result['extracted_data']['address']['CITY']),
-                        "zip_codes": list(match_result['extracted_data']['address']['ZIP_CODE']),
-                        "countries": list(match_result['extracted_data']['address']['COUNTRY'])
-                    }
+                    # "extracted_data": {
+                    #     "dates": list(match_result['extracted_data']['dates']),
+                    #     "delivery_notes": list(match_result['extracted_data']['delivery_notes']),
+                    #     "streets": list(match_result['extracted_data']['address']['STREET']),
+                    #     "cities": list(match_result['extracted_data']['address']['CITY']),
+                    #     "zip_codes": list(match_result['extracted_data']['address']['ZIP_CODE']),
+                    #     "countries": list(match_result['extracted_data']['address']['COUNTRY'])
+                    # }
                 }
                 
                 results.append(result)
@@ -464,6 +464,12 @@ class EnhancedPDFMatcher:
             else:
                 score = match_result['score'] if match_result else 0
                 print(f"✗ No match for page {page_num} (best score: {score:.2f})")
+                result = {
+                    "page_number": page_num,
+                    "UID": "NONE FOUND IN SAP JSON"
+                }
+                results.append(result)
+            
         
         # Save results
         print(f"Saving results to {output_path}")
@@ -521,10 +527,11 @@ def main():
         )
         
         # Display summary
-        if results:
-            print(f"\nTop matches:")
-            for result in sorted(results, key=lambda x: x['match_score'], reverse=True)[:5]:
-                print(f"  Page {result['page_number']}: {result['Delivery Note Number']} (score: {result['match_score']:.2f})")
+        # NOT NEEDED
+        # if results:
+        #     print(f"\nTop matches:")
+        #     for result in sorted(results, key=lambda x: x['match_score'], reverse=True)[:5]:
+        #         print(f"  Page {result['page_number']}: {result['Delivery Note Number']} (score: {result['match_score']:.2f})")
         
     except Exception as e:
         print(f"Error during processing: {e}")
