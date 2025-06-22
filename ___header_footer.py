@@ -3,8 +3,8 @@ import json
 import re
 
 # Update paths according to your system
-pdf_path = r"C:\projects\hackathon_ScienceHack\BECONEX_challenge_materials_samples\batch_7_2023_2024.pdf"
-output_path = r"C:\projects\hackathon_ScienceHack\HeaderFooterOut.json"
+pdf_path = r"C:\projects\hackathon_ScienceHack\BECONEX_challenge_materials_samples\batch_1_2017_2018.pdf"
+output_path = r"C:\projects\hackathon_ScienceHack\HeaderFooterOut_2017.json"
 
 # Simplified and corrected regex patterns
 NAME_PATTERN = r"[A-ZÄÖÜ][a-zäöüß]+\s+[A-ZÄÖÜ][a-zäöüß]+"

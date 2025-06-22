@@ -214,9 +214,9 @@ class EnhancedPDFMatcher:
             "Vendor - Name 2": 2,
             "Vendor - Address - Street": 4,
             "Vendor - Address - Number": 2,
-            "Vendor - Address - ZIP Code": 4,  # Increased weight for ZIP
-            "Vendor - Address - City": 4,      # Increased weight for city
-            "Vendor - Address - Country": 1,
+            "Vendor - Address - ZIPf Code": 3,  
+            "Vendor - Address - City": 2,      
+            #"Vendor - Address - Country": 1,
             "Vendor - Address - Region": 1,
         }
         
@@ -415,7 +415,7 @@ class EnhancedPDFMatcher:
             }
         } if best_entry else None
 
-    def process_pdf(self, pdf_path: str, sap_file: str, output_path: str, threshold: float = 15.0):
+    def process_pdf(self, pdf_path: str, sap_file: str, output_path: str, threshold: float = 10.0):
         """Main processing function with higher default threshold"""
         print("Loading SAP data...")
         with open(sap_file, 'r', encoding='utf-8') as f:
@@ -504,12 +504,7 @@ def main():
     print(f"SAP file: {sap_file}")
     print(f"Output file: {output_path}")
     
-    # Ask for threshold
-    try:
-        threshold_input = input("\nEnter matching threshold (default 15.0, higher = stricter): ").strip()
-        threshold = float(threshold_input) if threshold_input else 15.0
-    except ValueError:
-        threshold = 15.0
+    threshold = 10.0 # I set it to 10.0 now. You can tweak it if you want.
     
     print(f"Using threshold: {threshold}")
     print("="*80)
@@ -526,13 +521,7 @@ def main():
             threshold
         )
         
-        # Display summary
-        # NOT NEEDED
-        # if results:
-        #     print(f"\nTop matches:")
-        #     for result in sorted(results, key=lambda x: x['match_score'], reverse=True)[:5]:
-        #         print(f"  Page {result['page_number']}: {result['Delivery Note Number']} (score: {result['match_score']:.2f})")
-        
+       
     except Exception as e:
         print(f"Error during processing: {e}")
         import traceback
