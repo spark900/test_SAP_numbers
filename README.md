@@ -1,397 +1,335 @@
-import os
-import json
-import re
-import PyPDF2
+Initial idea:
 
-def extract_text_from_pdf(pdf_path):
-    try:
-        with open(pdf_path, 'rb') as f:
-            reader = PyPDF2.PdfReader(f)
-            full_text = ""
-            for page in reader.pages:
-                text = page.extract_text()
-                if text:
-                    full_text += text + "\n"
-            return full_text.lower()  # Return normalized text for case-insensitive matching
-    except Exception as e:
-        print(f"Error processing {pdf_path}: {str(e)}")
-        return ""
+Probabilistic PDF Pairing Approach:
+This is a probability‑based method that builds on our existing text extraction and first-page-detection pipeline. For each entry in our JSON metadata, we will compare its fields against every candidate PDF and assign a likelihood score indicating how probable it is that the two belong together. We base these scores on a hierarchy of matching criteria (stronger matches yield higher probability):
+Company name + Order/PO/Delivery Note number + "Page 1 of X"
+Company name + Order/PO/Delivery Note number
+Address + Order/PO/Delivery Note number
+Order/PO/Delivery Note number + Date
+Delivery number + Date
+Delivery number (alone)
+Order/PO/Delivery Note number (alone)
+Terms & Conditions (AGB) reference + Company name
+Ranking is not final
 
-# Enhanced date extraction patterns
-DATE_PATTERNS = [
-    r'\b\d{4}-\d{2}-\d{2}\b',       # YYYY-MM-DD
-    r'\b\d{2}\.\d{2}\.\d{4}\b',     # DD.MM.YYYY
-    r'\b\d{4}\.\d{2}\.\d{2}\b',     # YYYY.MM.DD
-    r'\b\d{2}/\d{2}/\d{4}\b',       # MM/DD/YYYY
-    r'\b\d{4}/\d{2}/\d{2}\b',       # YYYY/MM/DD
-    r'\b\d{1,2}\s+[A-Za-z]{3,10}\s+\d{4}\b',  # 01 January 2023
-    r'\b[A-Za-z]{3,10}\s+\d{1,2},\s+\d{4}\b',  # January 01, 2023
-    r'\b\d{8}\b'                     # YYYYMMDD
-]
+Algorithm Overview
+Initialization
+ Load all JSON entries and their associated first page PDF (from the other approach).
+Pairwise Scoring
+ For each JSON entry J (representing one page or document):
+Compare J against every (or at least every non-first-page) candidate PDF page P.
+Evaluate which of the above criteria apply.
+Assign a probability score based on the highest-matching criterion.
+Example: If both company and delivery note match exactly, assign a very high probability (e.g. 0.9).
+If only the company matches, assign a lower probability (e.g. 0.3).
+Probability Matrix
+ Build a matrix M where M[J][P] = probability(J matches P).
+Symmetric Confirmation
+ Later, when processing JSON entry K, compare it to all pages again, filling out row M[K][*]. This ensures that both directions are considered.
+Pair Selection
+ For each page P, find the JSON entry J* that maximizes M[J*][P]. (We also have already the first page matched to the JSON from the other approach [No two pages marked as “first-pages” will be matched, even if they have a big matching score [Example: Two first pages from Alternate have matching addresses and matching company name so the probability would be moderate])
+If the highest probability for P is above a chosen threshold, consider P and J* a match.
+Otherwise, leave P unpaired or flag for manual review.
+Assembly
+ Merge PDFs that have been paired (i.e., those with mutually highest probability matches).
+Example: If PDF_A has a 90% match to PDF_B and lower scores to others, group A with B.
 
-YEAR_PATTERNS = [
-    r'\b(20[0-3]\d)\b',  # Years from 2000-2039
-    r'\b(19\d{2})\b'     # Years from 1900-1999
-]
+Illustrative Example
+We have two multi-page documents A (pages A1, A2) and B (pages B1, B2).
+In the first pass, comparing JSON entry for A1:
+A2 scores 0.9 (identical delivery note, company, page sequence)
+B1 and B2 each score 0.3 (same company but no matching delivery note)
+In the second pass, comparing JSON entry for B1:
+A1 and A2 each score 0.3 (company match only)
+B2 scores 0.9 (delivery note + company + page sequence)
+At the end, we pair A1 ↔ A2 and B1 ↔ B2 (90% matches), and ignore the weaker 30% associations.
 
-# Enhanced address patterns with common abbreviations - FIXED REGEX
-ADDRESS_PATTERNS = {
-    "STREET": [
-        r'\b([a-zäöüß]+(?:[- ](?:[a-zäöüß]+))?\.?\s*\d{0,4}[a-z]?)\b',  # Fixed pattern
-        r'\b([a-zäöüß]+(?:[- ](?:[a-zäöüß]+))?\.?\b'  # Street name only
-    ],
-    "CITY": [
-        r'\b([a-z][a-zäöüß]+(?:[- ](?:[a-z][a-zäöüß]+))?)\b'  # City names
-    ],
-    "ZIP_CODE": [
-        r'\b(\d{4,5})\b'  # ZIP codes (4-5 digits)
-    ],
-    "COUNTRY": [
-        r'\b(deutschland|germany|österreich|austria|schweiz|switzerland)\b'
-    ]
-}
 
-# Common street suffix abbreviations with enhanced matching
-STREET_SUFFIXES = {
-    r'\bstr(?:\.|aße)?\b': 'straße',
-    r'\bstrasse\b': 'straße',
-    r'\bpl(?:\.|atz)?\b': 'platz',
-    r'\ballee\b': 'allee',
-    r'\bweg\b': 'weg',
-    r'\bg(?:\.|asse)?\b': 'gasse',
-    r'\bch(?:\.|aussee)?\b': 'chaussee',
-    r'\bblvd\b': 'boulevard',
-    r'\bave\b': 'avenue',
-    r'\bst(?:\.|reet)?\b': 'street',
-    r'\brd\b': 'road',
-    r'\bbr(?:\.|ücke)?\b': 'brücke',
-    r'\bbruecke\b': 'brücke',
-    r'\bprom(?:\.|enade)?\b': 'promenade',
-    r'\bstr\b': 'straße',  # Common abbreviation
-    r'\bpl\b': 'platz',    # Common abbreviation
-    r'\bstr\.\b': 'straße' # Abbreviation with dot
-}
+----
 
-def extract_dates(text):
-    dates = set()
-    for pattern in DATE_PATTERNS:
-        matches = re.findall(pattern, text)
-        for match in matches:
-            # Normalize different date formats
-            if re.match(r'\d{4}-\d{2}-\d{2}', match):
-                dates.add(match)  # Already in YYYY-MM-DD format
-            elif re.match(r'\d{2}\.\d{2}\.\d{4}', match):
-                # Convert DD.MM.YYYY to YYYY-MM-DD
-                d, m, y = match.split('.')
-                dates.add(f"{y}-{m.zfill(2)}-{d.zfill(2)}")
-            elif re.match(r'\d{4}\.\d{2}\.\d{2}', match):
-                # Convert YYYY.MM.DD to YYYY-MM-DD
-                y, m, d = match.split('.')
-                dates.add(f"{y}-{m}-{d}")
-            elif re.match(r'\d{2}/\d{2}/\d{4}', match):
-                # Convert MM/DD/YYYY to YYYY-MM-DD
-                m, d, y = match.split('/')
-                dates.add(f"{y}-{m.zfill(2)}-{d.zfill(2)}")
-            elif re.match(r'\d{4}/\d{2}/\d{2}', match):
-                # Convert YYYY/MM/DD to YYYY-MM-DD
-                y, m, d = match.split('/')
-                dates.add(f"{y}-{m}-{d}")
-            elif re.match(r'\d{8}', match):
-                # Convert YYYYMMDD to YYYY-MM-DD
-                dates.add(f"{match[:4]}-{match[4:6]}-{match[6:8]}")
-            else:
-                # Keep other formats as-is for now
-                dates.add(match)
-    return dates
+First match non first page approach:
+python find_matches.py --pdf-file Path/to/PDF/batch.pdf
 
-def extract_years(text):
-    years = set()
-    for pattern in YEAR_PATTERNS:
-        matches = re.findall(pattern, text)
-        years.update(matches)
-    return years
+Example output: (not working realiably / not out final approach)
+Tested with: batch_2_2019_2020.pdf
+1 --> 2 mit 27.0%
+1 --> 3 mit 1.7%
+1 --> 4 mit 2.3%
+1 --> 5 mit 1.7%
+1 --> 6 mit 2.2%
+1 --> 7 mit 0.8%
+1 --> 8 mit 2.5%
+1 --> 9 mit 3.4%
+1 --> 10 mit 1.4%
+1 --> 11 mit 1.9%
+1 --> 12 mit 2.0%
+1 --> 13 mit 1.4%
+1 --> 14 mit 2.4%
+1 --> 15 mit 3.0%
+1 --> 16 mit 2.3%
+2 --> 3 mit 3.8%
+2 --> 4 mit 2.7%
+2 --> 5 mit 1.1%
+2 --> 6 mit 3.5%
+2 --> 7 mit 1.6%
+2 --> 8 mit 1.5%
+2 --> 9 mit 2.9%
+2 --> 10 mit 3.3%
+2 --> 11 mit 1.9%
+2 --> 12 mit 2.1%
+2 --> 13 mit 2.9%
+2 --> 14 mit 2.4%
+2 --> 15 mit 3.3%
+2 --> 16 mit 2.1%
+3 --> 4 mit 37.9%
+3 --> 5 mit 5.5%
+3 --> 6 mit 1.7%
+3 --> 7 mit 0.8%
+3 --> 8 mit 2.5%
+3 --> 9 mit 3.3%
+3 --> 10 mit 1.1%
+3 --> 11 mit 4.6%
+3 --> 12 mit 0.9%
+3 --> 13 mit 6.0%
+3 --> 14 mit 1.9%
+3 --> 15 mit 1.4%
+3 --> 16 mit 2.9%
+4 --> 5 mit 1.2%
+4 --> 6 mit 1.3%
+4 --> 7 mit 0.3%
+4 --> 8 mit 1.9%
+4 --> 9 mit 1.3%
+4 --> 10 mit 1.2%
+4 --> 11 mit 1.2%
+4 --> 12 mit 1.3%
+4 --> 13 mit 1.4%
+4 --> 14 mit 1.3%
+4 --> 15 mit 1.5%
+4 --> 16 mit 1.9%
+5 --> 6 mit 3.2%
+5 --> 7 mit 1.0%
+5 --> 8 mit 6.5%
+5 --> 9 mit 8.3%
+5 --> 10 mit 1.5%
+5 --> 11 mit 5.6%
+5 --> 12 mit 2.5%
+5 --> 13 mit 7.8%
+5 --> 14 mit 3.1%
+5 --> 15 mit 1.5%
+5 --> 16 mit 1.7%
+6 --> 7 mit 8.5%
+6 --> 8 mit 8.1%
+6 --> 9 mit 8.0%
+6 --> 10 mit 3.8%
+6 --> 11 mit 1.7%
+6 --> 12 mit 3.2%
+6 --> 13 mit 7.7%
+6 --> 14 mit 2.4%
+6 --> 15 mit 2.6%
+6 --> 16 mit 3.2%
+7 --> 8 mit 6.2%
+7 --> 9 mit 6.3%
+7 --> 10 mit 3.3%
+7 --> 11 mit 5.7%
+7 --> 12 mit 2.4%
+7 --> 13 mit 7.9%
+7 --> 14 mit 8.6%
+7 --> 15 mit 6.1%
+7 --> 16 mit 12.2%
+8 --> 9 mit 7.2%
+8 --> 10 mit 1.2%
+8 --> 11 mit 1.6%
+8 --> 12 mit 2.6%
+8 --> 13 mit 4.7%
+8 --> 14 mit 2.3%
+8 --> 15 mit 1.9%
+8 --> 16 mit 2.4%
+9 --> 10 mit 1.7%
+9 --> 11 mit 1.2%
+9 --> 12 mit 2.5%
+9 --> 13 mit 5.0%
+9 --> 14 mit 3.0%
+9 --> 15 mit 2.6%
+9 --> 16 mit 1.6%
+10 --> 11 mit 1.5%
+10 --> 12 mit 1.8%
+10 --> 13 mit 4.7%
+10 --> 14 mit 3.0%
+10 --> 15 mit 1.5%
+10 --> 16 mit 3.9%
+11 --> 12 mit 1.6%
+11 --> 13 mit 4.8%
+11 --> 14 mit 3.5%
+11 --> 15 mit 4.1%
+11 --> 16 mit 1.9%
+12 --> 13 mit 8.5%
+12 --> 14 mit 3.3%
+12 --> 15 mit 3.7%
+12 --> 16 mit 2.3%
+13 --> 14 mit 3.1%
+13 --> 15 mit 2.9%
+13 --> 16 mit 1.7%
+14 --> 15 mit 3.2%
+14 --> 16 mit 1.8%
+15 --> 16 mit 2.7%
 
-def extract_address_components(text):
-    components = {
-        "STREET": set(),
-        "CITY": set(),
-        "ZIP_CODE": set(),
-        "COUNTRY": set()
-    }
-    
-    # Extract street names
-    for pattern in ADDRESS_PATTERNS["STREET"]:
-        try:
-            matches = re.findall(pattern, text)
-            for match in matches:
-                street_name = match.strip()
-                # Normalize street suffixes
-                for pattern, replacement in STREET_SUFFIXES.items():
-                    street_name = re.sub(pattern, replacement, street_name, flags=re.IGNORECASE)
-                components["STREET"].add(street_name)
-        except re.error as e:
-            print(f"Regex error with pattern '{pattern}': {str(e)}")
-    
-    # Extract cities
-    for pattern in ADDRESS_PATTERNS["CITY"]:
-        try:
-            matches = re.findall(pattern, text)
-            for match in matches:
-                components["CITY"].add(match.strip())
-        except re.error as e:
-            print(f"Regex error with pattern '{pattern}': {str(e)}")
-    
-    # Extract ZIP codes
-    for pattern in ADDRESS_PATTERNS["ZIP_CODE"]:
-        try:
-            matches = re.findall(pattern, text)
-            components["ZIP_CODE"].update(matches)
-        except re.error as e:
-            print(f"Regex error with pattern '{pattern}': {str(e)}")
-    
-    # Extract countries
-    for pattern in ADDRESS_PATTERNS["COUNTRY"]:
-        try:
-            matches = re.findall(pattern, text, flags=re.IGNORECASE)
-            components["COUNTRY"].update(match.strip().lower() for match in matches)
-        except re.error as e:
-            print(f"Regex error with pattern '{pattern}': {str(e)}")
-    
-    return components
 
-# Load SAP data
-sap_file = r"C:\projects\hackathon_ScienceHack\BECONEX_challenge_materials_samples\SAP_data.json"
-with open(sap_file, encoding='utf-8') as f:
-    sap_data = json.load(f)
+Second approach (not final approach / not working reliably)
 
-# Define fields to match with their weights
-field_weights = {
-    "Delivery Note Number": 5,        # Highest weight as primary identifier
-    "Delivery Note Date": 4,           # Important temporal marker
-    "Vendor - Name 1": 4,              # Key vendor information
-    "Vendor - Name 2": 2,
-    "Vendor - Address - Street": 3,
-    "Vendor - Address - Number": 2,
-    "Vendor - Address - ZIP Code": 3,  # Higher weight as more unique
-    "Vendor - Address - City": 3,
-    "Vendor - Address - Country": 3,
-    "Vendor - Address - Region": 2,
-    "MJAHR": 3                        # Important temporal marker
-}
+python find_matches_2.py --pdf-file Path/To/PDF/batch/file.pdf --json-path Path/To/JSON.pdf
 
-# Preprocess SAP data
-sap_entries = []
-for entry in sap_data:
-    if not entry.get("Delivery Note Number"):
-        continue
-    
-    # Create normalized field values
-    normalized_fields = {}
-    for field in field_weights.keys():
-        value = entry.get(field)
-        if value is None:
-            continue
-            
-        # Handle different data types
-        if isinstance(value, (int, float)):
-            normalized = str(value)
-        elif isinstance(value, str):
-            # Normalize string: lowercase, remove special characters except hyphens
-            normalized = re.sub(r'[^\w\s-]', '', value.lower())
-        else:
-            normalized = str(value).lower()
-            
-        normalized_fields[field] = normalized
-    
-    # Add delivery year separately
-    delivery_year = None
-    if entry.get("Delivery Note Date"):
-        try:
-            delivery_year = entry["Delivery Note Date"][:4]  # Extract YYYY
-        except:
-            pass
-    
-    sap_entries.append({
-        'entry': entry,
-        'normalized': normalized_fields,
-        'delivery_year': delivery_year
-    })
+Example output:
+PDF 'batch_2_2019_2020.pdf' mit 16 Seiten analysiert.
 
-# Set paths
-pdf_folder = r"C:\projects\hackathon_ScienceHack\BECONEX_challenge_materials_samples\batch_6_2023_1"
-output_path = r"C:\projects\hackathon_ScienceHack\output_comprehensive.json"
+Seiten-Mapping zu JSON-Einträgen:
+Seite 1 → Eintrag 'LS19037829' mit 90.0%
+Seite 2 → Eintrag 'LS19037829' mit 90.0%
+Seite 3 → Eintrag '709 024 7953' mit 90.0%
+Seite 4 → Eintrag '708 985 9234' mit 90.0%
+Seite 5 → Eintrag '40433-001' mit 90.0%
+Seite 6 → Eintrag '354382935' mit 10.0%
+Seite 7 → Eintrag '1315749502' mit 8.5%
+Seite 8 → Eintrag 'hd_53799691' mit 12.8%
+Seite 9 → Eintrag 'LS-19-1007067' mit 90.0%
+Seite 10 → Eintrag '6060857244' mit 90.0%
+Seite 11 → Eintrag '201900501866' mit 90.0%
+Seite 12 → Eintrag '22078787' mit 90.0%
+Seite 13 → Eintrag '70588' mit 50.0%
+Seite 14 → Eintrag '1315749502' mit 8.5%
+Seite 15 → Eintrag 'hd_53799691' mit 90.0%
+Seite 16 → Eintrag '120961772' mit 90.0%
 
-# Process PDFs
-results = []
-threshold = 8  # Minimum score threshold for a valid match
+Inter-Seiten Wahrscheinlichkeiten:
+1 --> 2 mit 90.0%
+1 --> 3 mit 4.3%
+1 --> 4 mit 4.3%
+1 --> 5 mit 8.5%
+1 --> 6 mit 8.5%
+1 --> 7 mit 8.5%
+1 --> 8 mit 12.8%
+1 --> 9 mit 8.5%
+1 --> 10 mit 4.3%
+1 --> 11 mit 8.5%
+1 --> 12 mit 4.3%
+1 --> 13 mit 8.5%
+1 --> 14 mit 8.5%
+1 --> 15 mit 8.5%
+1 --> 16 mit 8.5%
+2 --> 3 mit 4.3%
+2 --> 4 mit 4.3%
+2 --> 5 mit 8.5%
+2 --> 6 mit 8.5%
+2 --> 7 mit 8.5%
+2 --> 8 mit 12.8%
+2 --> 9 mit 8.5%
+2 --> 10 mit 4.3%
+2 --> 11 mit 8.5%
+2 --> 12 mit 4.3%
+2 --> 13 mit 8.5%
+2 --> 14 mit 8.5%
+2 --> 15 mit 8.5%
+2 --> 16 mit 8.5%
+3 --> 4 mit 10.0%
+3 --> 5 mit 12.8%
+3 --> 6 mit 4.3%
+3 --> 7 mit 0.0%
+3 --> 8 mit 4.3%
+3 --> 9 mit 0.0%
+3 --> 10 mit 4.3%
+3 --> 11 mit 4.3%
+3 --> 12 mit 8.5%
+3 --> 13 mit 0.0%
+3 --> 14 mit 0.0%
+3 --> 15 mit 0.0%
+3 --> 16 mit 12.8%
+4 --> 5 mit 12.8%
+4 --> 6 mit 4.3%
+4 --> 7 mit 0.0%
+4 --> 8 mit 4.3%
+4 --> 9 mit 0.0%
+4 --> 10 mit 4.3%
+4 --> 11 mit 4.3%
+4 --> 12 mit 8.5%
+4 --> 13 mit 0.0%
+4 --> 14 mit 0.0%
+4 --> 15 mit 0.0%
+4 --> 16 mit 12.8%
+5 --> 6 mit 4.3%
+5 --> 7 mit 4.3%
+5 --> 8 mit 8.5%
+5 --> 9 mit 4.3%
+5 --> 10 mit 8.5%
+5 --> 11 mit 4.3%
+5 --> 12 mit 8.5%
+5 --> 13 mit 4.3%
+5 --> 14 mit 4.3%
+5 --> 15 mit 4.3%
+5 --> 16 mit 12.8%
+6 --> 7 mit 0.0%
+6 --> 8 mit 4.3%
+6 --> 9 mit 0.0%
+6 --> 10 mit 0.0%
+6 --> 11 mit 0.0%
+6 --> 12 mit 0.0%
+6 --> 13 mit 0.0%
+6 --> 14 mit 0.0%
+6 --> 15 mit 0.0%
+6 --> 16 mit 4.3%
+7 --> 8 mit 8.5%
+7 --> 9 mit 8.5%
+7 --> 10 mit 4.3%
+7 --> 11 mit 8.5%
+7 --> 12 mit 0.0%
+7 --> 13 mit 8.5%
+7 --> 14 mit 8.5%
+7 --> 15 mit 4.3%
+7 --> 16 mit 8.5%
+8 --> 9 mit 8.5%
+8 --> 10 mit 4.3%
+8 --> 11 mit 8.5%
+8 --> 12 mit 4.3%
+8 --> 13 mit 8.5%
+8 --> 14 mit 8.5%
+8 --> 15 mit 12.8%
+8 --> 16 mit 8.5%
+9 --> 10 mit 4.3%
+9 --> 11 mit 8.5%
+9 --> 12 mit 4.3%
+9 --> 13 mit 8.5%
+9 --> 14 mit 8.5%
+9 --> 15 mit 8.5%
+9 --> 16 mit 8.5%
+10 --> 11 mit 4.3%
+10 --> 12 mit 8.5%
+10 --> 13 mit 4.3%
+10 --> 14 mit 4.3%
+10 --> 15 mit 4.3%
+10 --> 16 mit 12.8%
+11 --> 12 mit 4.3%
+11 --> 13 mit 8.5%
+11 --> 14 mit 8.5%
+11 --> 15 mit 8.5%
+11 --> 16 mit 8.5%
+12 --> 13 mit 0.0%
+12 --> 14 mit 0.0%
+12 --> 15 mit 0.0%
+12 --> 16 mit 8.5%
+13 --> 14 mit 8.5%
+13 --> 15 mit 8.5%
+13 --> 16 mit 8.5%
+14 --> 15 mit 4.3%
+14 --> 16 mit 8.5%
+15 --> 16 mit 8.5%
 
-for filename in os.listdir(pdf_folder):
-    if not filename.lower().endswith('.pdf'):
-        continue
-        
-    pdf_path = os.path.join(pdf_folder, filename)
-    pdf_text = extract_text_from_pdf(pdf_path)
-    
-    # Extract dates, years, and address components from PDF text
-    extracted_dates = extract_dates(pdf_text)
-    extracted_years = extract_years(pdf_text)
-    extracted_address = extract_address_components(pdf_text)
-    
-    best_score = 0
-    best_entry = None
-    best_match_details = {}
-    
-    for sap_entry in sap_entries:
-        score = 0
-        match_details = {}
-        
-        # Score each field
-        for field, normalized_value in sap_entry['normalized'].items():
-            # Special handling for date field
-            if field == "Delivery Note Date":
-                # Extract date in YYYY-MM-DD format
-                date_str = normalized_value[:10] if len(normalized_value) >= 10 else normalized_value
-                
-                # Check for exact date match
-                if date_str in extracted_dates:
-                    score += field_weights[field]
-                    match_details[field] = f"Matched: {date_str}"
-                else:
-                    # Check for year match if full date not found
-                    year_str = date_str[:4]
-                    if year_str in extracted_years:
-                        score += field_weights[field] * 0.7  # Partial credit for year match
-                        match_details[field] = f"Partial: Year matched {year_str}"
-                    else:
-                        match_details[field] = "Not matched"
-                continue
-                
-            # Special handling for MJAHR field (year)
-            if field == "MJAHR":
-                # Look for exact year match
-                if normalized_value in extracted_years:
-                    score += field_weights[field]
-                    match_details[field] = f"Matched: {normalized_value}"
-                else:
-                    match_details[field] = "Not matched"
-                continue
-                
-            # Special handling for address fields
-            if field == "Vendor - Address - Street":
-                # Normalize SAP street name for comparison
-                sap_street = normalized_value
-                for pattern, replacement in STREET_SUFFIXES.items():
-                    sap_street = re.sub(pattern, replacement, sap_street, flags=re.IGNORECASE)
-                
-                # Check against extracted streets
-                matched = False
-                for street in extracted_address["STREET"]:
-                    # Use flexible matching with normalization
-                    norm_street = street
-                    for pattern, replacement in STREET_SUFFIXES.items():
-                        norm_street = re.sub(pattern, replacement, norm_street, flags=re.IGNORECASE)
-                    
-                    if sap_street == norm_street:
-                        score += field_weights[field]
-                        match_details[field] = f"Matched: {street}"
-                        matched = True
-                        break
-                if not matched:
-                    match_details[field] = "Not matched"
-                continue
-                
-            if field == "Vendor - Address - City":
-                # Check against extracted cities
-                sap_city = normalized_value
-                matched = False
-                for city in extracted_address["CITY"]:
-                    if sap_city == city:
-                        score += field_weights[field]
-                        match_details[field] = f"Matched: {city}"
-                        matched = True
-                        break
-                if not matched:
-                    match_details[field] = "Not matched"
-                continue
-                
-            if field == "Vendor - Address - Country":
-                # Check against extracted countries
-                sap_country = normalized_value
-                matched = False
-                for country in extracted_address["COUNTRY"]:
-                    if sap_country == country:
-                        score += field_weights[field]
-                        match_details[field] = f"Matched: {country}"
-                        matched = True
-                        break
-                if not matched:
-                    match_details[field] = "Not matched"
-                continue
-                
-            if field == "Vendor - Address - ZIP Code":
-                # Check against extracted ZIP codes
-                sap_zip = normalized_value
-                matched = False
-                for zip_code in extracted_address["ZIP_CODE"]:
-                    if sap_zip == zip_code:
-                        score += field_weights[field]
-                        match_details[field] = f"Matched: {zip_code}"
-                        matched = True
-                        break
-                if not matched:
-                    match_details[field] = "Not matched"
-                continue
-                
-            # Special handling for other numeric fields
-            if field in ["Vendor - Address - Number"]:
-                # Look for exact number matches
-                if re.search(rf'\b{re.escape(normalized_value)}\b', pdf_text):
-                    score += field_weights[field]
-                    match_details[field] = f"Matched: {normalized_value}"
-                else:
-                    match_details[field] = "Not matched"
-                continue
-                
-            # Standard string matching
-            if normalized_value in pdf_text:
-                score += field_weights[field]
-                match_details[field] = f"Matched: {normalized_value}"
-            else:
-                # Try token-based matching for longer strings
-                tokens = normalized_value.split()
-                matched_tokens = sum(1 for token in tokens if token in pdf_text)
-                
-                if matched_tokens > 0:
-                    # Partial match score based on token coverage
-                    partial_score = field_weights[field] * (matched_tokens / len(tokens)) * 0.7
-                    score += partial_score
-                    match_details[field] = f"Partial ({matched_tokens}/{len(tokens)} tokens)"
-                else:
-                    match_details[field] = "Not matched"
-        
-        # Check if this is the best match so far
-        if score > best_score:
-            best_score = score
-            best_entry = sap_entry
-            best_match_details = match_details
-    
-    # Check if best score meets threshold
-    if best_score >= threshold and best_entry:
-        results.append({
-            "filename": filename,
-            "Delivery Note Number": best_entry['entry']["Delivery Note Number"],
-            "MBLNR": best_entry['entry']["MBLNR"],
-            "year": best_entry['delivery_year'],
-            "match_score": best_score,
-            "match_details": best_match_details
-        })
-        print(f"✅ Matched {filename} with score {best_score}")
-    else:
-        print(f"⚠️ No match for {filename} (best score: {best_score})")
+Third Appoach: Only consider the pages that could not previously be matched to a JSON entry and try to assign them to a first page.(Not our final approach / not working 100% reliable)
 
-# Save results
-with open(output_path, 'w', encoding='utf-8') as f:
-    json.dump(results, f, indent=4, ensure_ascii=False)
+IMPORTANT: Replace the paths in Code:
+pdf_path = 
+sap_file_path = 
 
-print(f"\n✅ Matched {len(results)}/{len(os.listdir(pdf_folder))} files")
-print(f"Results saved to {output_path}")
+Example output:
+Seiten-zu-Seiten-Übereinstimmungswahrscheinlichkeiten:
+1 -> 2 mit 90.00% Wahrscheinlichkeit
+2 -> 1 mit 90.00% Wahrscheinlichkeit
+3 -> 4 mit 10.00% Wahrscheinlichkeit
+4 -> 3 mit 10.00% Wahrscheinlichkeit
