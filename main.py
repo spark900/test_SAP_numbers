@@ -1,3 +1,4 @@
+# main.py
 import os
 import argparse
 from check_logo import (
