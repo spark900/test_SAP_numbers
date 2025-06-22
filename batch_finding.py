@@ -1,0 +1,408 @@
+import os
+import json
+import re
+import PyPDF2
+from datetime import datetime
+from difflib import SequenceMatcher
+
+def extract_text_from_pdf_by_page(pdf_path):
+    """Extracts text from each page of a PDF separately"""
+    try:
+        with open(pdf_path, 'rb') as f: 
+            reader = PyPDF2.PdfReader(f)
+            page_texts = []
+            num_pages = len(reader.pages)
+            print(f"Processing PDF with {num_pages} pages...")
+            
+            for i in range(num_pages):
+                page = reader.pages[i]
+                text = page.extract_text()
+                if text:
+                    page_texts.append(text.lower())
+                else:
+                    page_texts.append("")
+            return page_texts
+    except Exception as e:
+        print(f"Error processing {pdf_path}: {str(e)}")
+        return []
+
+# ... [keep all your existing functions and variables unchanged] ...
+
+# Set paths
+pdf_path = r"C:\Users\fabia\OneDrive\Surface Go\Dokumente\Hackathon\TUM Hackathon 2025\BECONEX_challenge_materials_samples\BECONEX_challenge_materials_samples\batch_5_2022_2.pdf"
+output_path = r"C:\Users\fabia\OneDrive\Surface Go\Dokumente\Hackathon\TUM Hackathon 2025\Extraction Code\test_SAP_numbers\out\output_document_pairing.json"
+
+# Process PDF by pages
+results = []
+threshold = 8
+
+# Extract all pages from the PDF
+pdf_texts = extract_text_from_pdf_by_page(pdf_path)  # Now returns list of page texts
+
+if not pdf_texts:
+    print("No pages extracted from PDF. Exiting.")
+    exit()
+
+print(f"Processing {len(pdf_texts)} pages...")
+
+for page_num, pdf_text in enumerate(pdf_texts, start=1):
+    # ... [keep the rest of your processing code unchanged] ...
+    # The rest of your existing code for processing each page goes here
+
+    DATE_PATTERNS = [
+        # Add this pattern FIRST for time-formatted dates (case-insensitive AM/PM)
+        r'\b\d{1,2}/\d{1,2}/\d{4}\s+\d{1,2}:\d{2}:\d{2}\s*(?:am|pm)?\b',  # 6/19/2023 4:47:50AM
+        
+        # Existing patterns below
+        r'\b\d{4}-\d{2}-\d{2}\b',       # YYYY-MM-DD
+        r'\b\d{2}\.\d{2}\.\d{4}\b',     # DD.MM.YYYY
+        r'\b\d{4}\.\d{2}\.\d{2}\b',     # YYYY.MM.DD
+        r'\b\d{1,2}[-/.]\d{1,2}[-/.]\d{4}(?=\s|$)',  # MM/DD/YYYY
+        r'\b\d{4}/\d{2}/\d{2}\b',       # YYYY/MM/DD
+        r'\b\d{1,2}\s+[A-Za-z]{3,10}\s+\d{4}\b',  # 01 January 2023
+        r'\b[A-Za-z]{3,10}\s+\d{1,2},\s+\d{4}\b',  # January 01, 2023
+        r'\b\d{8}\b'                     # YYYYMMDD
+    ]
+    # Parse a string into a datetime.date (fuzzy)
+    def normalize_to_date(date_str):
+        formats = [
+            "%m/%d/%Y %I:%M:%S%p",  # 6/19/2023 4:47:50AM
+            "%m/%d/%Y",             # 6/19/2023
+            "%Y-%m-%d", "%Y.%m.%d", "%Y/%m/%d",
+            "%d.%m.%Y", "%d-%m-%Y",
+            "%Y%m%d",
+            "%d %B %Y", "%B %d %Y", "%B %d, %Y"
+        ]
+        for fmt in formats:
+            try:
+                return datetime.strptime(date_str.strip(), fmt).date()
+            except ValueError:
+                continue
+        return None
+
+    # Global ZIP code patterns
+    ZIP_PATTERNS = [
+        r'\b\d{4,5}\b',          # Standard 4-5 digit ZIP (DE/AT)
+        r'\b[A-Z]\d[A-Z]\s?\d[A-Z]\d\b',  # Canadian format (A1A 1A1)
+        r'\b\d{5}-\d{4}\b',      # US extended ZIP (12345-6789)
+        r'\b\d{5}\b',            # US basic ZIP
+        r'\b[A-Z]{1,2}\d{1,2}[A-Z]?\s?\d[A-Z]{2}\b'  # UK format (SW1A 1AA)
+    ]
+
+    # Enhanced street suffix handling with fuzzy matching
+    STREET_SUFFIXES = {
+        r'\bstr(?:\.|aße)?\b': 'straße',
+        r'\bstrasse\b': 'straße',
+        r'\bpl(?:\.|atz)?\b': 'platz',
+        r'\ballee\b': 'allee',
+        r'\bweg\b': 'weg',
+        r'\bg(?:\.|asse)?\b': 'gasse',
+        r'\bch(?:\.|aussee)?\b': 'chaussee',
+        r'\bblvd\b': 'boulevard',
+        r'\bave\b': 'avenue',
+        r'\bst(?:\.|reet)?\b': 'street',
+        r'\brd\b': 'road',
+        r'\bbr(?:\.|ücke)?\b': 'brücke',
+        r'\bbruecke\b': 'brücke',
+        r'\bprom(?:\.|enade)?\b': 'promenade',
+        r'\bstr\b': 'straße',
+        r'\bpl\b': 'platz',
+        r'\bstr\.\b': 'straße',
+        # r'\bschlosspl\b': 'schlossplatz',
+        # r'\bburgstr\b': 'burgstraße'
+    }
+
+    # def extract_dates(text):
+    #     dates = set()
+    #     for pattern in DATE_PATTERNS:
+    #         matches = re.findall(pattern, text)
+    #         for match in matches:
+    #             # Normalization logic remains the same
+    #             if re.match(r'\d{4}-\d{2}-\d{2}', match):
+    #                 dates.add(match)
+    #             elif re.match(r'\d{2}\.\d{2}\.\d{4}', match):
+    #                 d, m, y = match.split('.')
+    #                 dates.add(f"{y}-{m.zfill(2)}-{d.zfill(2)}")
+    #             elif re.match(r'\d{4}\.\d{2}\.\d{2}', match):
+    #                 y, m, d = match.split('.')
+    #                 dates.add(f"{y}-{m}-{d}")
+    #             elif re.match(r'\d{2}/\d{2}/\d{4}', match):
+    #                 m, d, y = match.split('/')
+    #                 dates.add(f"{y}-{m.zfill(2)}-{d.zfill(2)}")
+    #             elif re.match(r'\d{4}/\d{2}/\d{2}', match):
+    #                 y, m, d = match.split('/')
+    #                 dates.add(f"{y}-{m}-{d}")
+    #             elif re.match(r'\d{8}', match):
+    #                 dates.add(f"{match[:4]}-{match[4:6]}-{match[6:8]}")
+    #             else:
+    #                 dates.add(match)
+    #     return dates
+
+
+    def extract_dates(text):
+        raw_dates = set()
+        for pattern in DATE_PATTERNS:
+            matches = re.findall(pattern, text)
+            raw_dates.update(matches)
+
+        normalized_dates = set()
+        date_formats = [
+            "%Y-%m-%d",            # 2023-06-19
+            "%d.%m.%Y",            # 19.06.2023
+            "%Y.%m.%d",            # 2023.06.19
+            "%m/%d/%Y",            # 6/19/2023
+            "%m/%d/%Y %I:%M:%S%p", # 6/19/2023 4:47:50AM
+            "%Y/%m/%d",            # 2023/06/19
+            "%d %B %Y",            # 19 June 2023
+            "%B %d %Y",            # June 19 2023
+            "%B %d, %Y",           # June 19, 2023
+            "%Y%m%d",              # 20230619
+            "%m/%d/%Y %I:%M:%S%p",  # 6/19/2023 4:47:50AM - ADDED
+            "%m/%d/%Y",             # 6/19/2023
+            "%Y-%m-%d", "%Y.%m.%d", "%Y/%m/%d",
+            "%d.%m.%Y", "%d-%m-%Y",
+            "%Y%m%d",
+            "%d %B %Y", "%B %d %Y", "%B %d, %Y"
+        ]
+
+        for raw in raw_dates:
+            raw = raw.strip()
+            for fmt in date_formats:
+                try:
+                    dt = datetime.strptime(raw, fmt)
+                    normalized_dates.add(dt.date().isoformat())
+                    break
+                except ValueError:
+                    continue
+
+        return normalized_dates
+
+
+    def extract_address_components(text):
+        components = {
+            "STREET": set(),
+            "CITY": set(),
+            "ZIP_CODE": set(),
+            "COUNTRY": set()
+        }
+        
+        # Extract street names with improved fuzzy matching
+        street_pattern = r'\b([a-zäöüß]+(?:[- ](?:[a-zäöüß]+))?\.?\s*\d{0,4}[a-z]?)\b'
+        matches = re.findall(street_pattern, text)
+        for match in matches:
+            street_name = match.strip()
+            for pattern, replacement in STREET_SUFFIXES.items():
+                street_name = re.sub(pattern, replacement, street_name, flags=re.IGNORECASE)
+            components["STREET"].add(street_name)
+        
+        # Extract cities
+        city_pattern = r'\b([a-z][a-zäöüß]+(?:[- ](?:[a-z][a-zäöüß]+))?)\b'
+        matches = re.findall(city_pattern, text)
+        for match in matches:
+            components["CITY"].add(match.strip())
+        
+        # Extract global ZIP codes
+        for pattern in ZIP_PATTERNS:
+            matches = re.findall(pattern, text)
+            components["ZIP_CODE"].update(matches)
+        
+        # Extract countries
+        country_pattern = r'\b(deutschland|germany|österreich|austria|schweiz|switzerland|italia|italy|france|spanien|spain)\b'
+        matches = re.findall(country_pattern, text, flags=re.IGNORECASE)
+        components["COUNTRY"].update(match.strip().lower() for match in matches)
+        
+        return components
+
+    def fuzzy_match(str1, str2, threshold=0.8):
+        """Fuzzy string matching using sequence matching"""
+        return SequenceMatcher(None, str1, str2).ratio() >= threshold
+
+    # Load SAP data
+    sap_file = r"C:\Users\fabia\OneDrive\Surface Go\Dokumente\Hackathon\TUM Hackathon 2025\BECONEX_challenge_materials_samples\BECONEX_challenge_materials_samples\SAP_data.json"
+    with open(sap_file, encoding='utf-8') as f:
+        sap_data = json.load(f)
+
+    # Define fields to match with weights
+    field_weights = {
+        "Delivery Note Number": 5,
+        "Delivery Note Date": 4,
+        "Vendor - Name 1": 4,
+        "Vendor - Name 2": 1,
+        "Vendor - Address - Street": 3,
+        "Vendor - Address - Number": 2,
+        "Vendor - Address - ZIP Code": 3,
+        "Vendor - Address - City": 3,
+        "Vendor - Address - Country": 3,
+        "Vendor - Address - Region": 1,
+        #"MJAHR": 3
+    }
+
+    # Preprocess SAP data
+    sap_entries = []
+    for entry in sap_data:
+        if not entry.get("Delivery Note Number"):
+            continue
+        
+        normalized_fields = {}
+        for field in field_weights.keys():
+            value = entry.get(field)
+            if value is None:
+                continue
+                
+            if isinstance(value, (int, float)):
+                normalized = str(value)
+            elif isinstance(value, str):
+                normalized = re.sub(r'[^\w\s-]', '', value.lower())
+            else:
+                normalized = str(value).lower()
+                
+            # Normalize street suffixes in SAP data too
+            if field == "Vendor - Address - Street":
+                for pattern, replacement in STREET_SUFFIXES.items():
+                    normalized = re.sub(pattern, replacement, normalized, flags=re.IGNORECASE)
+                
+            normalized_fields[field] = normalized
+        
+        sap_entries.append({
+            'entry': entry,
+            'normalized': normalized_fields
+        })
+
+    # Set paths
+    pdf_path = r"C:\Users\fabia\OneDrive\Surface Go\Dokumente\Hackathon\TUM Hackathon 2025\BECONEX_challenge_materials_samples\BECONEX_challenge_materials_samples\batch_5_2022_2.pdf"
+    output_path = r"C:\Users\fabia\OneDrive\Surface Go\Dokumente\Hackathon\TUM Hackathon 2025\Extraction Code\test_SAP_numbers\out\output_document_pairing.json"
+
+    # Process PDF by pages
+    results = []
+    threshold = 8
+
+    # Extract all pages from the PDF
+    pdf_texts = extract_text_from_pdf_by_page(pdf_path)  # Assuming this function exists and returns a list of page texts
+
+    for page_num, pdf_text in enumerate(pdf_texts, start=1):
+        extracted_dates = extract_dates(pdf_text)
+        extracted_address = extract_address_components(pdf_text)
+        
+        best_score = 0
+        best_entry = None
+        best_match_details = {}
+        
+        for sap_entry in sap_entries:
+            score = 0
+            match_details = {}
+            
+            for field, normalized_value in sap_entry['normalized'].items():
+                if field == "Delivery Note Date":
+                    date_str = normalized_value[:10] if len(normalized_value) >= 10 else normalized_value
+                    
+                    if date_str in extracted_dates:
+                        score += field_weights[field]
+                        match_details[field] = f"Matched: {date_str}"
+                    else:
+                        match_details[field] = "Not matched"
+                    continue
+                    
+                if field == "Vendor - Address - Street":
+                    sap_street = normalized_value
+                    matched = False
+                    
+                    for doc_street in extracted_address["STREET"]:
+                        if fuzzy_match(sap_street, doc_street) or \
+                        sap_street in doc_street or \
+                        doc_street in sap_street:
+                            score += field_weights[field]
+                            match_details[field] = f"Matched: {doc_street}"
+                            matched = True
+                            break
+                            
+                    if not matched:
+                        match_details[field] = "Not matched"
+                    continue
+                    
+                if field == "Vendor - Address - City":
+                    sap_city = normalized_value
+                    matched = False
+                    for city in extracted_address["CITY"]:
+                        if sap_city == city:
+                            score += field_weights[field]
+                            match_details[field] = f"Matched: {city}"
+                            matched = True
+                            break
+                    if not matched:
+                        match_details[field] = "Not matched"
+                    continue
+                    
+                if field == "Vendor - Address - Country":
+                    sap_country = normalized_value
+                    matched = False
+                    for country in extracted_address["COUNTRY"]:
+                        if sap_country == country:
+                            score += field_weights[field]
+                            match_details[field] = f"Matched: {country}"
+                            matched = True
+                            break
+                    if not matched:
+                        match_details[field] = "Not matched"
+                    continue
+                    
+                if field == "Vendor - Address - ZIP Code":
+                    sap_zip = normalized_value
+                    matched = False
+                    for zip_code in extracted_address["ZIP_CODE"]:
+                        if sap_zip == zip_code:
+                            score += field_weights[field]
+                            match_details[field] = f"Matched: {zip_code}"
+                            matched = True
+                            break
+                    if not matched:
+                        match_details[field] = "Not matched"
+                    continue
+                    
+                if field in ["Vendor - Address - Number"]:
+                    if re.search(rf'\b{re.escape(normalized_value)}\b', pdf_text):
+                        score += field_weights[field]
+                        match_details[field] = f"Matched: {normalized_value}"
+                    else:
+                        match_details[field] = "Not matched"
+                    continue
+                    
+                # Standard string matching
+                if normalized_value in pdf_text:
+                    score += field_weights[field]
+                    match_details[field] = f"Matched: {normalized_value}"
+                else:
+                    tokens = normalized_value.split()
+                    matched_tokens = sum(1 for token in tokens if token in pdf_text)
+                    
+                    if matched_tokens > 0:
+                        partial_score = field_weights[field] * (matched_tokens / len(tokens)) * 0.7
+                        score += partial_score
+                        match_details[field] = f"Partial ({matched_tokens}/{len(tokens)} tokens)"
+                    else:
+                        match_details[field] = "Not matched"
+            
+            if score > best_score:
+                best_score = score
+                best_entry = sap_entry
+                best_match_details = match_details
+        
+        if best_score >= threshold and best_entry:
+            uid = f"{best_entry['entry']['MBLNR']}_{best_entry['entry']['MJAHR']}"
+            results.append({
+                "page_number": page_num,
+                "Delivery Note Number": best_entry['entry']["Delivery Note Number"],
+                "MBLNR": best_entry['entry']["MBLNR"],
+                "UID": uid,
+                "match_score": best_score,
+                "match_details": best_match_details
+            })
+            print(f"Matched page {page_num} with score {best_score}")
+        else:
+            print(f"No match for page {page_num} (best score: {best_score})")
+
+    # Save results
+    with open(output_path, 'w', encoding='utf-8') as f:
+        json.dump(results, f, indent=4, ensure_ascii=False)
+
+    print(f"\nMatched {len(results)}/{len(pdf_texts)} pages")
+    print(f"Results saved to {output_path}")
