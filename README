@@ -1,0 +1,5 @@
+Logo detection:
+Upload Logo into the folder "logo"
+Algorithm tries to find this logo inside the provided documents and outputs the marked position of the logo in the document
+
+python main.py Path/to/Logo.png Path/to/PDF/folder --threshold 0.3
